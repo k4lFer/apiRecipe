@@ -12,7 +12,7 @@ namespace apprecipes.ServerObjet
         }
 
         public DtoMessage mo { get; set; }
-        public DtoAuthentication authetication { get; set; }
         public Tokens tokens { get; set; }
+        public DtoAuthentication authetication { get; set; }
     }
 }

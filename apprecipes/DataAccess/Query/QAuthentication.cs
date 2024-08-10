@@ -1,4 +1,5 @@
 using apprecipes.DataAccess.Connection;
+using apprecipes.DataAccess.Entity;
 using apprecipes.DataTransferObject.Object;
 
 namespace apprecipes.DataAccess.Query
@@ -7,12 +8,15 @@ namespace apprecipes.DataAccess.Query
     {
         public DtoAuthentication GetByUsername(string username)
         {
-            using (DataBaseContext dbc = new DataBaseContext())
-            {
-                var x = dbc.Authentications.FirstOrDefault(u => u.username == username);
-                return AutoMapper.mapper.Map<DtoAuthentication>(x);
-                //return AutoMapper.mapper.Map<DtoAuthentication>(dbc.Authentications.FirstOrDefault(w => w.username == username));
-            }
+            using DataBaseContext dbc = new();
+            Authentication? authentication = dbc.Authentications.FirstOrDefault(u => u.username == username);
+            return AutoMapper.mapper.Map<DtoAuthentication>(authentication);
+        }
+        
+        public bool ExistByUsername(string username)
+        {
+            using DataBaseContext dbc = new();
+            return dbc.Authentications.Any(u => u.username == username);
         }
     }
 }

@@ -6,22 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace apprecipes.DataAccess.Connection
 {
-    public class DataBaseContext : DbContext
+    public class DataBaseContext : DataBaseContextGeneric
     {
         public DbSet<Authentication> Authentications { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Image> Images { get; set; }
         
-        public DataBaseContext()
-        {
-            AutoMapper.Start();
-        }
-        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Image>().ToTable("images");
             modelBuilder.Entity<Authentication>().ToTable("authentications");
-            modelBuilder.Entity<Authentication>().ToTable("users");
+            modelBuilder.Entity<User>().ToTable("users");
+            modelBuilder.Entity<Image>().ToTable("images");
 
             base.OnModelCreating(modelBuilder);
             
@@ -42,7 +37,6 @@ namespace apprecipes.DataAccess.Connection
                     .HasForeignKey<Authentication>(i => i.id)
                     .IsRequired();
             });
-
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -50,7 +44,7 @@ namespace apprecipes.DataAccess.Connection
             try
             { 
                 string connectionString = AppSettings.GetConnectionStringMariaDb();
-                ServerVersion serverVersion = new MySqlServerVersion(new Version(11, 4, 2));
+                ServerVersion serverVersion = new MySqlServerVersion(new Version(8, 4, 0));
                 optionsBuilder.UseMySql(connectionString, serverVersion);
             }
             catch (Exception ex)

@@ -96,6 +96,7 @@ namespace apprecipes.Config
                 
                 message.Success();
                 tokens.accessToken = await GenerateAccessToken(user);
+                tokens.refreshToken = refreshToken;
                 return (tokens, message);
             }
             catch (SecurityTokenException ex)

@@ -2,9 +2,8 @@ CREATE DATABASE `dbapirecipe`
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_spanish_ci;
 
-
 CREATE TABLE `authentications` (
-  `id` char(36) PRIMARY KEY,
+  `id` varchar(36) PRIMARY KEY,
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` ENUM ('Admin', 'Other', 'Logged') NOT NULL,
@@ -31,7 +30,7 @@ CREATE TABLE `recipes` (
   `preparation` timestamp NOT NULL,
   `cooking` timestamp NOT NULL,
   `estimated` timestamp NOT NULL,
-  `difficulty` ENUM ('easy', 'half', 'difficult') NOT NULL,
+  `difficulty` ENUM ('Easy', 'Half', 'Difficult') NOT NULL,
   `createdAt` timestamp NOT NULL,
   `updatedAt` timestamp NOT NULL,
   `createdBy` char(36) NULL,
@@ -41,14 +40,16 @@ CREATE TABLE `recipes` (
 CREATE TABLE `likes` (
   `idRecipe` char(36) NOT NULL,
   `idUser` char(36) NOT NULL,
+  PRIMARY KEY (`idRecipe`, `idUser`),
   FOREIGN KEY (`idRecipe`) REFERENCES `recipes` (`id`),
   FOREIGN KEY (`idUser`) REFERENCES `users` (`id`)
-  PRIMARY KEY (`idRecipe`, `idUser`)
 );
 
-alter table `likes`
-	add constraint `checkLikesId`
-	check (`idRecipe` <> `idUser`);
+/** 
+ * alter table `likes`
+ *	add constraint `checkLikesId`
+ *	check (`idRecipe` <> `idUser`);
+ */
 
 CREATE TABLE `ratings` (
   `id` char(36) PRIMARY KEY NOT NULL,
@@ -105,4 +106,11 @@ INSERT INTO `users` (`id`, `idAuthentication`, `firstName`, `lastName`, `email`,
 VALUES 
 ('09e9f526-6727-48f0-bd9f-5562d9ff9f71', '374949e5-e7c7-4d2a-84b4-42478ef1648a', 'John', 'Doe', 'john.doe@example.com', NOW(), NOW()),
 ('5f0e139c-f711-431e-b16b-2fd704f53a85', '8f59ff5a-8bd2-4120-ab7c-8335a855cb4b', 'Jane', 'Smith', 'jane.smith@example.com', NOW(), NOW());
+
+
+DESCRIBE `authentications`;
+ALTER TABLE `authentications` ADD COLUMN password VARCHAR(255);
+SELECT * FROM authentications WHERE username = 'lionos';
+
+
 

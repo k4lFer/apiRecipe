@@ -1,10 +1,11 @@
 using apprecipes.DataTransferObject.OtherObject;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace apprecipes.Generic
 {
-    //[Authorize]
+    [Authorize]
     [ApiController]
     [Route("api/v1/[controller]")]
     public class ControllerGeneric<So> : ControllerBase

@@ -1,7 +1,11 @@
+using System.Text;
 using System.Text.Json.Serialization;
 using apprecipes.Helper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 
 namespace apprecipes
 {
@@ -9,35 +13,72 @@ namespace apprecipes
     {
         public static void Main(string[] args)
         {
+            string myAllowSpecificOrigins = "AllowOnlyDefaults";
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+            #region appsettings
             AppSettings.Init();
-            var builder = WebApplication.CreateBuilder(args);
+            #endregion
+            
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.Configure<ApiBehaviorOptions>(options => options.SuppressModelStateInvalidFilter = true);
 
-            builder.Services.AddAuthorization();
-
-            builder.Services.AddControllers();
-
-            builder.Services.Configure<ApiBehaviorOptions>( options => options.SuppressModelStateInvalidFilter = true );
-
-            builder.Services.AddCors( options =>
-                options.AddPolicy("default", policy =>
+            #region CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(myAllowSpecificOrigins,
+                    policy =>
+                    {
+                        policy.WithOrigins(AppSettings.GetOriginRequest().Split(','))
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowAnyOrigin()
+                            .SetIsOriginAllowedToAllowWildcardSubdomains();
+                    });
+            });
+            #endregion
+            
+            #region JWT
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(jwtBearerOptions =>
+            {
+                jwtBearerOptions.SaveToken = true;
+                jwtBearerOptions.RequireHttpsMetadata = false;
+                jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
                 {
-                    policy.WithOrigins(AppSettings.GetOriginRequest().Split(','))
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .SetIsOriginAllowedToAllowWildcardSubdomains();
-                })
-            );
-
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = AppSettings.GetOriginIssuer(),
+                    ValidAudience = AppSettings.GetOriginAudience(),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AppSettings.GetAccessJwtSecret())),
+                    ClockSkew = TimeSpan.Zero,
+                };
+            });
+            builder.Services.AddAuthorization();
+            #endregion
+            
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 });
 
-            builder.Services.AddEndpointsApiExplorer();
-
+            #region authentication to Swagger UI
             builder.Services.AddSwaggerGen(options =>
             {
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
@@ -55,7 +96,9 @@ namespace apprecipes
                         Url = new Uri("http://localhost:5901")
                     }
                 });
+                options.OperationFilter<SecurityRequirementsOperationFilter>();
             });
+            #endregion
 
             var app = builder.Build();
 
@@ -72,11 +115,11 @@ namespace apprecipes
             }
 
             app.UseHttpsRedirection();
+            app.UseCors(myAllowSpecificOrigins);
             app.UseAuthorization();
-
-            app.MapControllers();
-            app.UseCors("default");
             app.UseAuthentication();
+            
+            app.MapControllers();
 
             app.Run();
         }
