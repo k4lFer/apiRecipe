@@ -47,6 +47,7 @@ namespace apprecipes.Helper
         {
             return dtoAppSettings.RefreshJwtSecret;
         }
+        
         public static string GetOriginRequest()
         {
             return dtoAppSettings.OriginRequest;
