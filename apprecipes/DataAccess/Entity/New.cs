@@ -4,15 +4,14 @@ using apprecipes.DataAccess.Generic;
 
 namespace apprecipes.DataAccess.Entity
 {
-    public class Image : DateGeneric
+    public class New : DateGeneric
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public Guid id { get; set; }
+        public Guid id { get; set; }   
         public Guid idRecipe { get; set; }
-        public string url { get; set; }
-        
-        #region parents
-        public Recipe ParentRecipe { get; set; }
-        #endregion
+        public string title { get; set; }
+        public string subtitle { get; set; }
+        public string content { get; set; }
+        public bool status { get; set; }
     }
 }

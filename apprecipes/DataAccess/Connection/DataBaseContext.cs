@@ -10,13 +10,23 @@ namespace apprecipes.DataAccess.Connection
     {
         public DbSet<Authentication> Authentications { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Recipe> Recipes { get; set; }
+        public DbSet<Like> Likes { get; set; }
+        public DbSet<Rating> Ratings { get; set; }
         public DbSet<Image> Images { get; set; }
+        public DbSet<Video> Videos { get; set; }
+        public DbSet<New> News { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Authentication>().ToTable("authentications");
             modelBuilder.Entity<User>().ToTable("users");
+            modelBuilder.Entity<Recipe>().ToTable("recipes");
+            modelBuilder.Entity<Like>().ToTable("likes");
+            modelBuilder.Entity<Rating>().ToTable("ratings");
             modelBuilder.Entity<Image>().ToTable("images");
+            modelBuilder.Entity<Video>().ToTable("videos");
+            modelBuilder.Entity<New>().ToTable("news");
 
             base.OnModelCreating(modelBuilder);
             
@@ -37,6 +47,45 @@ namespace apprecipes.DataAccess.Connection
                     .HasForeignKey<Authentication>(i => i.id)
                     .IsRequired();
             });
+
+            modelBuilder.Entity<Category>(entity =>
+            {
+                entity.HasKey(e => e.id);
+                entity.HasMany(e => e.ChildRecipes)
+                    .WithOne(e => e.ParentCategory)
+                    .HasForeignKey(e => e.idCategory);
+            });
+            
+            modelBuilder.Entity<Recipe>(entity =>
+            {
+                entity.HasKey(e => e.id);
+                entity.HasOne(e => e.ParentCategory)
+                    .WithMany(c => c.ChildRecipes)
+                    .HasForeignKey(e => e.idCategory);
+                entity.HasMany(e => e.ChildImages)
+                    .WithOne(i => i.ParentRecipe)
+                    .HasForeignKey(i => i.idRecipe);
+                entity.HasMany(e => e.ChildVideos)
+                    .WithOne(v => v.ParentRecipe)
+                    .HasForeignKey(v => v.idRecipe);
+            });
+            /*
+            modelBuilder.Entity<Image>(entity =>
+            {
+                entity.HasKey(e => e.id);
+                entity.HasOne(e => e.ParentRecipe)
+                    .WithMany(r => r.ChildImages)
+                    .HasForeignKey(e => e.idRecipe);
+            });
+
+            modelBuilder.Entity<Video>(entity =>
+            {
+                entity.HasKey(e => e.id);
+                entity.HasOne(e => e.ParentRecipe)
+                    .WithMany(r => r.ChildVideos)
+                    .HasForeignKey(e => e.idRecipe);
+            });
+            */
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -44,7 +93,7 @@ namespace apprecipes.DataAccess.Connection
             try
             { 
                 string connectionString = AppSettings.GetConnectionStringMariaDb();
-                ServerVersion serverVersion = new MySqlServerVersion(new Version(8, 4, 0));
+                ServerVersion serverVersion = new MySqlServerVersion(new Version(11, 4, 2));
                 optionsBuilder.UseMySql(connectionString, serverVersion);
             }
             catch (Exception ex)

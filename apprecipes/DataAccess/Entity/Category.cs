@@ -1,18 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using apprecipes.DataAccess.Generic;
 
 namespace apprecipes.DataAccess.Entity
 {
-    public class Image : DateGeneric
+    public class Category
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid id { get; set; }
-        public Guid idRecipe { get; set; }
-        public string url { get; set; }
+        public string name { get; set; }
+        public string? description { get; set; }
         
-        #region parents
-        public Recipe ParentRecipe { get; set; }
+        #region childs
+        public ICollection<Recipe> ChildRecipes { get; set; } = new List<Recipe>();
         #endregion
     }
 }

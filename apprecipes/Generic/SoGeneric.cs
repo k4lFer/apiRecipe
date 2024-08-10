@@ -11,6 +11,6 @@ namespace apprecipes.Generic
 
         public DtoMessage mo { get; set; }
         public Dto dto { get; set; }
-        public List<Dto> listDto { get; set; }
+        public ICollection<Dto> listDto { get; set; }
     }
 }

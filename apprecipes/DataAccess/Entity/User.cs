@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using apprecipes.DataAccess.Generic;
 
 namespace apprecipes.DataAccess.Entity
 {
-    [Table("users")]
-    public class User
+    public class User : DateGeneric
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid id { get; set; }
@@ -12,9 +12,7 @@ namespace apprecipes.DataAccess.Entity
         public string firstName { get; set; }
         public string lastName { get; set; }
         public string email { get; set; }
-        public DateTime createdAt { get; set; }
-        public DateTime updatedAt { get; set; }
-
+        
         public Authentication ChildAthentication { get; set; }
     }
 }
