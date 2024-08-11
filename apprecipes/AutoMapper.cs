@@ -20,6 +20,9 @@ namespace apprecipes
                     
                     cfg.CreateMap<Image, DtoImage>().MaxDepth(3);
                     cfg.CreateMap<DtoImage, Image>().MaxDepth(3);
+                    
+                    cfg.CreateMap<Video, DtoVideo>().MaxDepth(3);
+                    cfg.CreateMap<DtoVideo, Video>().MaxDepth(3);
 
                     cfg.CreateMap<User, DtoUser>().MaxDepth(3)
                         .ForMember(dest => dest.ChildDtoAthentication, opt => opt.MapFrom(src => src.ChildAthentication));
@@ -27,12 +30,14 @@ namespace apprecipes
                         .ForMember(dest => dest.ChildAthentication, opt => opt.MapFrom(src => src.ChildDtoAthentication));
 
                     cfg.CreateMap<Recipe, DtoRecipe>().MaxDepth(3)
-                        .ForMember(dest => dest.ChildDtoImages, opt => opt.MapFrom(src => src.ChildImages))
-                        .ForMember(dest => dest.ChildDtoVideos, opt => opt.MapFrom(src => src.ChildVideos));
+                        //.ForMember(dest => dest.ParentDtoCategory, opt => opt.MapFrom(src => src.ParentCategory))
+                        .ForMember(dest => dest.images, opt => opt.MapFrom(src => src.ChildImages))
+                        .ForMember(dest => dest.videos, opt => opt.MapFrom(src => src.ChildVideos));
                     
                     cfg.CreateMap<DtoRecipe, Recipe>().MaxDepth(3)
-                        .ForMember(dest => dest.ChildImages, opt => opt.MapFrom(src => src.ChildDtoImages))
-                        .ForMember(dest => dest.ChildVideos, opt => opt.MapFrom(src => src.ChildDtoVideos));
+                        //.ForMember(dest => dest.ParentCategory, opt => opt.MapFrom(src => src.ParentDtoCategory))
+                        .ForMember(dest => dest.ChildImages, opt => opt.MapFrom(src => src.images))
+                        .ForMember(dest => dest.ChildVideos, opt => opt.MapFrom(src => src.videos));
                 });
                 mapper = configuration.CreateMapper();
                 _initMapper = false;

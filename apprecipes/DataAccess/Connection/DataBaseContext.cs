@@ -59,9 +59,11 @@ namespace apprecipes.DataAccess.Connection
             modelBuilder.Entity<Recipe>(entity =>
             {
                 entity.HasKey(e => e.id);
-                entity.HasOne(e => e.ParentCategory)
-                    .WithMany(c => c.ChildRecipes)
-                    .HasForeignKey(e => e.idCategory);
+                
+                entity.Property(e => e.difficulty)
+                    .IsRequired()
+                    .HasConversion(v => v.ToString(), v => (Difficulty)Enum.Parse(typeof(Difficulty), v))
+                    .HasColumnType("enum('Easy','Half','Difficult')");
                 entity.HasMany(e => e.ChildImages)
                     .WithOne(i => i.ParentRecipe)
                     .HasForeignKey(i => i.idRecipe);
@@ -69,23 +71,6 @@ namespace apprecipes.DataAccess.Connection
                     .WithOne(v => v.ParentRecipe)
                     .HasForeignKey(v => v.idRecipe);
             });
-            /*
-            modelBuilder.Entity<Image>(entity =>
-            {
-                entity.HasKey(e => e.id);
-                entity.HasOne(e => e.ParentRecipe)
-                    .WithMany(r => r.ChildImages)
-                    .HasForeignKey(e => e.idRecipe);
-            });
-
-            modelBuilder.Entity<Video>(entity =>
-            {
-                entity.HasKey(e => e.id);
-                entity.HasOne(e => e.ParentRecipe)
-                    .WithMany(r => r.ChildVideos)
-                    .HasForeignKey(e => e.idRecipe);
-            });
-            */
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

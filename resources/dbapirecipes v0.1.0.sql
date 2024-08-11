@@ -98,7 +98,6 @@ CREATE TABLE `news` (
 );
 
 
-
 INSERT INTO `authentications` (`id`, `username`, `password`, `role`, `status`)
 VALUES 
 ('374949e5-e7c7-4d2a-84b4-42478ef1648a', 'lionos', '1001linux', 'Admin', true),
@@ -109,14 +108,7 @@ VALUES
 ('09e9f526-6727-48f0-bd9f-5562d9ff9f71', '374949e5-e7c7-4d2a-84b4-42478ef1648a', 'John', 'Doe', 'john.doe@example.com', NOW(), NOW()),
 ('5f0e139c-f711-431e-b16b-2fd704f53a85', '8f59ff5a-8bd2-4120-ab7c-8335a855cb4b', 'Jane', 'Smith', 'jane.smith@example.com', NOW(), NOW());
 
-/*
-SELECT p.`id`, p.`name`, p.description 
-FROM `tproduct` AS p
-ORDER BY p.`name`
-LIMIT 5 OFFSET 3;
-*/
 
--- Insertar una categoría
 INSERT INTO categories (id, name, description) VALUES 
 ('6ffef303-f76b-478a-b9d4-ee912c6c0bcd', 'Postres', 'Recetas de postres deliciosos.');
 
@@ -135,10 +127,29 @@ INSERT INTO videos (id, idRecipe, title, url, description, createdAt, updatedAt)
 ('d556a70f-0f9f-4182-9fcf-25aaf551a68c', '459e58c4-c303-4b02-9991-c49780a4a2d6', 'Preparación Cheesecake de Fresa', 'https://example.com/videos/cheesecake_fresa.mp4', 'Video tutorial para preparar cheesecake de fresa.', NOW(), NOW());
 
 
--- Parámetros de paginación
-SET @categoryId = '6ffef303-f76b-478a-b9d4-ee912c6c0bcd'; -- ID de la categoría
-SET @limit = 5; -- Número de registros por página
-SET @offset = 0; -- Desplazamiento para la página
+-- Inserción en la tabla de categorías
+INSERT INTO categories (id, name, description) VALUES 
+('b94b3f0c-3a6a-4a89-a840-722d6cfb1e9f', 'Entrantes', 'Recetas de entrantes deliciosos.');
+
+INSERT INTO recipes (id, idCategory, title, description, instruction, ingredient, preparation, cooking, estimated, difficulty, createdAt, updatedAt) VALUES 
+('bd763f60-60f7-4b87-b740-5f3061e1f8ed', 'b94b3f0c-3a6a-4a89-a840-722d6cfb1e9f', 'Bruschetta Clásica', 'Pan tostado con tomate, ajo y albahaca.', 'Tostar pan, mezclar tomate, ajo y albahaca, servir.', 'Pan, tomate, ajo, albahaca, aceite de oliva.', NOW(), NOW(), NOW(), 'Easy', NOW(), NOW()),
+('928ab6f7-4b3d-4d75-bd7d-eda2c0d92b23', 'b94b3f0c-3a6a-4a89-a840-722d6cfb1e9f', 'Hummus con Pita', 'Delicioso hummus servido con pan de pita.', 'Mezclar ingredientes, servir con pita.', 'Garbanzos, ajo, tahini, limón, pita.', NOW(), NOW(), NOW(), 'Easy', NOW(), NOW());
+
+INSERT INTO images (id, idRecipe, url, createdAt, updatedAt) VALUES 
+('4a09d1f8-9d6c-4562-b5b7-72a83d5d6fcd', 'bd763f60-60f7-4b87-b740-5f3061e1f8ed', 'https://example.com/images/bruschetta_clasica.jpg', NOW(), NOW()),
+('e4957dbb-3789-4f4c-b6f5-1a9a5e3cfeb8', '928ab6f7-4b3d-4d75-bd7d-eda2c0d92b23', 'https://example.com/images/hummus_pita.jpg', NOW(), NOW());
+
+INSERT INTO videos (id, idRecipe, title, url, description, createdAt, updatedAt) VALUES 
+('b49e9f29-cf1c-4a1b-88ea-4c287cd216af', 'bd763f60-60f7-4b87-b740-5f3061e1f8ed', 'Preparación Bruschetta Clásica', 'https://example.com/videos/bruschetta_clasica.mp4', 'Video paso a paso para preparar bruschetta clásica.', NOW(), NOW()),
+('d19f2cb3-732e-48e0-92e6-9b7e0342dcf5', '928ab6f7-4b3d-4d75-bd7d-eda2c0d92b23', 'Preparación Hummus con Pita', 'https://example.com/videos/humus_pita.mp4', 'Video tutorial para preparar hummus con pita.', NOW(), NOW());
+
+
+/*
+SELECT p.`id`, p.`name`, p.description 
+FROM `tproduct` AS p
+ORDER BY p.`name`
+LIMIT 5 OFFSET 3;
+*/
 
 SELECT 
     r.id AS recipe_id,
