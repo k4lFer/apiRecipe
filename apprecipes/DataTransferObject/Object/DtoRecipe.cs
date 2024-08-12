@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using apprecipes.DataAccess.Entity;
 using apprecipes.DataTransferObject.EnumObject;
 using apprecipes.DataTransferObject.ObjectGeneric;
 

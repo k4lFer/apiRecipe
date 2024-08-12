@@ -25,9 +25,9 @@ namespace apprecipes
                     cfg.CreateMap<DtoVideo, Video>().MaxDepth(3);
 
                     cfg.CreateMap<User, DtoUser>().MaxDepth(3)
-                        .ForMember(dest => dest.ChildDtoAthentication, opt => opt.MapFrom(src => src.ChildAthentication));
+                        .ForMember(dest => dest.authetication, opt => opt.MapFrom(src => src.ChildAthentication));
                     cfg.CreateMap<DtoUser, User>().MaxDepth(3)
-                        .ForMember(dest => dest.ChildAthentication, opt => opt.MapFrom(src => src.ChildDtoAthentication));
+                        .ForMember(dest => dest.ChildAthentication, opt => opt.MapFrom(src => src.authetication));
 
                     cfg.CreateMap<Recipe, DtoRecipe>().MaxDepth(3)
                         //.ForMember(dest => dest.ParentDtoCategory, opt => opt.MapFrom(src => src.ParentCategory))

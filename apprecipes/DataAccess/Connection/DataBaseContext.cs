@@ -44,7 +44,7 @@ namespace apprecipes.DataAccess.Connection
                 entity.HasKey(e => e.id);
                 entity.HasOne(e => e.ChildAthentication)
                     .WithOne(e => e.ParentUser)
-                    .HasForeignKey<Authentication>(i => i.id)
+                    .HasForeignKey<User>(i => i.idAuthentication)
                     .IsRequired();
             });
 
@@ -59,7 +59,6 @@ namespace apprecipes.DataAccess.Connection
             modelBuilder.Entity<Recipe>(entity =>
             {
                 entity.HasKey(e => e.id);
-                
                 entity.Property(e => e.difficulty)
                     .IsRequired()
                     .HasConversion(v => v.ToString(), v => (Difficulty)Enum.Parse(typeof(Difficulty), v))

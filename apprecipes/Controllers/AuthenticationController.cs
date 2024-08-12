@@ -30,15 +30,15 @@ namespace apprecipes.Controllers
                 }
                 
                 QAuthentication qAuthentication = new QAuthentication();
-
-                if (!qAuthentication.ExistByUsername(so.authetication.username))
+                EncryptWithAes aes = new();
+                if (!qAuthentication.ExistByUsername(aes.Encrypt(so.authetication.username)))
                 {
                     _so.mo.listMessage.Add("Este usuario no se encuentra registrado en el sistema.");
                     _so.mo.Error();
                     return _so;
                 }
                 
-                _so.authetication = qAuthentication.GetByUsername(so.authetication.username);
+                _so.authetication = qAuthentication.GetByUsername(aes.Encrypt(so.authetication.username));
                 
                 if (!_so.authetication.status)
                 {
@@ -48,8 +48,9 @@ namespace apprecipes.Controllers
                     return _so;
                 }
                 
-                if (_so.authetication.password == so.authetication.password)
+                if (BCrypt.Net.BCrypt.Verify( so.authetication.password, _so.authetication.password))
                 {
+                    _so.authetication.username = aes.Decrypt(_so.authetication.username);
                     _so.authetication.password = null;
                     _so.tokens.accessToken = await TokenUtils.GenerateAccessToken(_so.authetication);
                     _so.tokens.refreshToken = await TokenUtils.GenerateRefreshToken(_so.authetication);

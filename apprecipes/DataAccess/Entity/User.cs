@@ -8,7 +8,7 @@ namespace apprecipes.DataAccess.Entity
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid id { get; set; }
-        public Guid idAthentication { get; set; }
+        public Guid idAuthentication { get; set; }
         public string firstName { get; set; }
         public string lastName { get; set; }
         public string email { get; set; }

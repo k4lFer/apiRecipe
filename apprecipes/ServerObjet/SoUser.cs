@@ -5,6 +5,5 @@ namespace apprecipes.ServerObjet
 {
     public class SoUser : SoGeneric<DtoUser>
     {
-        
     }
 }

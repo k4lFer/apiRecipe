@@ -116,8 +116,8 @@ namespace apprecipes
 
             app.UseHttpsRedirection();
             app.UseCors(myAllowSpecificOrigins);
-            app.UseAuthorization();
             app.UseAuthentication();
+            app.UseAuthorization();
             
             app.MapControllers();
 
