@@ -50,7 +50,5 @@ namespace apprecipes.DataAccess.Query
                 .FirstOrDefault(r => mostLikedRating != null && r.id == mostLikedRating.idRecipe);
             return AutoMapper.mapper.Map<DtoRecipe>(recipe);
         } 
-
-
     }
 }

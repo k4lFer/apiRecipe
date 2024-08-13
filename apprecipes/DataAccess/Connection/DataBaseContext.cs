@@ -10,6 +10,7 @@ namespace apprecipes.DataAccess.Connection
     {
         public DbSet<Authentication> Authentications { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Category> Categories { get; set; }
         public DbSet<Recipe> Recipes { get; set; }
         public DbSet<Like> Likes { get; set; }
         public DbSet<Rating> Ratings { get; set; }
@@ -22,6 +23,7 @@ namespace apprecipes.DataAccess.Connection
             modelBuilder.Entity<Authentication>().ToTable("authentications");
             modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<Recipe>().ToTable("recipes");
+            modelBuilder.Entity<Category>().ToTable("categories");
             modelBuilder.Entity<Like>().ToTable("likes");
             modelBuilder.Entity<Rating>().ToTable("ratings");
             modelBuilder.Entity<Image>().ToTable("images");

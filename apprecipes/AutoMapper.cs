@@ -29,13 +29,14 @@ namespace apprecipes
                     cfg.CreateMap<DtoUser, User>().MaxDepth(3)
                         .ForMember(dest => dest.ChildAthentication, opt => opt.MapFrom(src => src.authetication));
 
+                    cfg.CreateMap<Category, DtoCategory>().MaxDepth(3);
+                    cfg.CreateMap<DtoCategory, Category>().MaxDepth(3);
+                    
                     cfg.CreateMap<Recipe, DtoRecipe>().MaxDepth(3)
-                        //.ForMember(dest => dest.ParentDtoCategory, opt => opt.MapFrom(src => src.ParentCategory))
                         .ForMember(dest => dest.images, opt => opt.MapFrom(src => src.ChildImages))
                         .ForMember(dest => dest.videos, opt => opt.MapFrom(src => src.ChildVideos));
                     
                     cfg.CreateMap<DtoRecipe, Recipe>().MaxDepth(3)
-                        //.ForMember(dest => dest.ParentCategory, opt => opt.MapFrom(src => src.ParentDtoCategory))
                         .ForMember(dest => dest.ChildImages, opt => opt.MapFrom(src => src.images))
                         .ForMember(dest => dest.ChildVideos, opt => opt.MapFrom(src => src.videos));
                 });

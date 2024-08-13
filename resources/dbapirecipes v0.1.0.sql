@@ -138,3 +138,9 @@ INSERT INTO ratings (id, idRecipe, comment, numberLike, createdAt, updatedAt) VA
 ('dcd5f249-7756-4a7e-92e7-19c383f0ff17', '928ab6f7-4b3d-4d75-bd7d-eda2c0d92b23', 'Hummus delicioso, la combinación con pita es ideal.', 110, NOW(), NOW());
 
 
+
+SELECT `id`, `name`, `description`
+FROM categories AS p
+ORDER BY `name`
+LIMIT 2 OFFSET 0;
+
