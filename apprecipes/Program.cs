@@ -72,12 +72,14 @@ namespace apprecipes
             #region authentication to Swagger UI
             builder.Services.AddSwaggerGen(options =>
             {
-                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
                     Name = "Authorization",
                     Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    Description = "Ingrese 'Bearer' [espacio] y luego el token en el campo de texto. Ejemplo: 'Bearer abc123'",
                 });
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
@@ -104,16 +106,10 @@ namespace apprecipes
 
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger(options =>
-                {
-                    options.SerializeAsV2 = true;
-                });
-                app.UseSwaggerUI(options =>
-                {
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-                });
+                app.UseSwagger(options => { options.SerializeAsV2 = true; });
+                app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1"); });
             }
-
+            
             app.UseHttpsRedirection();
             app.UseCors(myAllowSpecificOrigins);
             app.UseAuthentication();

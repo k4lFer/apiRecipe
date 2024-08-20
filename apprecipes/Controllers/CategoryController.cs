@@ -8,6 +8,7 @@ namespace apprecipes.Controllers
 {
     public class CategoryController : ControllerGeneric<SoCategory>
     {
+        
         [AllowAnonymous]
         [HttpGet]
         [Route("[action]")]
@@ -16,19 +17,19 @@ namespace apprecipes.Controllers
             try
             {
                 QCategory qCategory = new();
-                (_so.listDto, _so.pagination) = await qCategory.GetWithOffsetPagination(pageNumber, pageSize);
-                if (_so.listDto.Count < 2)
+                (_so.data.listDto, _so.data.additional) = await qCategory.GetWithOffsetPagination(pageNumber, pageSize);
+                if (_so.data.listDto.Count < 2)
                 {
-                    _so.dto = _so.listDto.First();
-                    _so.listDto = null;
+                    _so.data.dto = _so.data.listDto.First();
+                    _so.data.listDto = null;
                 }
-                _so.mo.Success();
+                _so.message.Success();
             }
             catch (Exception ex)
             {
-                _so.mo.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.mo.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.mo.Error();
+                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
+                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
+                _so.message.Error();
             }
             return _so;
         }

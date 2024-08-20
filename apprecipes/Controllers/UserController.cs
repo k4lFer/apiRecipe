@@ -1,8 +1,7 @@
-using System.Security.Claims;
 using apprecipes.Config;
 using apprecipes.DataAccess.Query;
-using apprecipes.DataTransferObject.EnumObject;
 using apprecipes.DataTransferObject.Object;
+using apprecipes.DataTransferObject.ObjectEnum;
 using apprecipes.Generic;
 using apprecipes.ServerObjet;
 using Microsoft.AspNetCore.Authorization;
@@ -19,52 +18,55 @@ namespace apprecipes.Controllers
         {
             try
             {
-                _so.mo = ValidateDto(so.dto, new List<string>() 
+                _so.message = ValidateDto(so.data.dto, new List<string>() 
                 {
-                    nameof(so.dto.firstName),
-                    nameof(so.dto.lastName),
-                    nameof(so.dto.email),
-                    nameof(so.dto.authetication.username),
-                    nameof(so.dto.authetication.password)
+                    nameof(so.data.dto.firstName),
+                    nameof(so.data.dto.lastName),
+                    nameof(so.data.dto.email),
+                    nameof(so.data.dto.authetication.username),
+                    nameof(so.data.dto.authetication.password)
                 });
                 
                 QUser qUser = new();
                 EncryptWithAes aes = new();
-                DtoUser? user = qUser.GetByUsername(aes.Encrypt(so.dto.authetication.username));
-                if (user != null && BCrypt.Net.BCrypt.Verify(so.dto.authetication.password, user.authetication.password))
+                DtoUser? userUsername = qUser.GetByUsername(aes.Encrypt(so.data.dto.authetication.username));
+                if (userUsername != null && aes.Decrypt(userUsername.authetication.username) == so.data.dto.authetication.username)
                 {
-                    _so.mo.listMessage.Add($"Este usuario ({so.dto.authetication.username}) ya se encuentra registrado en el sistema.");
-                    _so.mo.Warning();
+                    _so.message.listMessage.Add($"Este usuario ({so.data.dto.authetication.username}) ya se encuentra registrado en el sistema.");
+                    _so.message.Warning();
                     return _so;
                 }
-                if (user != null && aes.Decrypt(user.email) == so.dto.email)
+                DtoUser? userEmail = qUser.GetByEmail(aes.Encrypt(so.data.dto.email));
+                if (userEmail != null && aes.Decrypt(userEmail.email) == so.data.dto.email)
                 {
-                    _so.mo.listMessage.Add($"Este correo ({so.dto.email}) ya se encuentra registrado en el sistema.");
-                    _so.mo.Warning();
+                    _so.message.listMessage.Add($"Este correo ({so.data.dto.email}) ya se encuentra registrado en el sistema.");
+                    _so.message.Warning();
                     return _so;
                 }
-                if (so.dto != null)
+                
+                if (so.data.dto != null)
                 {
-                    so.dto.authetication.id = Guid.NewGuid();
-                    so.dto.authetication.username = aes.Encrypt(so.dto.authetication.username);
-                    so.dto.authetication.password = BCrypt.Net.BCrypt.HashPassword(so.dto.authetication.password);
-                    so.dto.authetication.role = Role.Logged;
-                    so.dto.authetication.status = true;
-                    so.dto.id = Guid.NewGuid();
-                    so.dto.idAuthentication = so.dto.authetication.id;
-                    so.dto.email = aes.Encrypt(so.dto.email);
-                    so.dto.createdAt = DateTime.UtcNow;
-                    so.dto.updatedAt = DateTime.UtcNow;
+                    so.data.dto.authetication.id = Guid.NewGuid();
+                    so.data.dto.authetication.username = aes.Encrypt(so.data.dto.authetication.username);
+                    so.data.dto.authetication.password = BCrypt.Net.BCrypt.HashPassword(so.data.dto.authetication.password);
+                    so.data.dto.authetication.role = Role.Logged;
+                    so.data.dto.authetication.status = true;
+                    so.data.dto.id = Guid.NewGuid();
+                    so.data.dto.idAuthentication = so.data.dto.authetication.id;
+                    so.data.dto.email = aes.Encrypt(so.data.dto.email);
+                    so.data.dto.createdAt = DateTime.UtcNow;
+                    so.data.dto.updatedAt = DateTime.UtcNow;
             
-                    qUser.Register(so.dto);
-                    _so.mo.Success();
+                    qUser.Register(so.data.dto);
+                    _so.message.listMessage.Add("Registro exitoso !.");
+                    _so.message.Success();
                 }
             }
             catch (Exception ex)
             {
-                _so.mo.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.mo.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.mo.Error();
+                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
+                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
+                _so.message.Error();
             }
             return _so;
         }
@@ -80,25 +82,25 @@ namespace apprecipes.Controllers
                 string userIdString = TokenUtils.GetUserIdFromAccessToken(accessToken);
                 Guid idAuthentication = new Guid(userIdString);
                 QUser qUser = new();
-                _so.dto = qUser.MyProfile(idAuthentication);
-                if (_so.dto != null)
+                _so.data.dto = qUser.MyProfile(idAuthentication);
+                if (_so.data.dto != null)
                 {
                     EncryptWithAes aes = new();
-                    _so.dto.email = aes.Decrypt(_so.dto.email);
-                    _so.dto.authetication.username = aes.Decrypt(_so.dto.authetication.username);
-                    _so.dto.authetication.password = null;
+                    _so.data.dto.email = aes.Decrypt(_so.data.dto.email);
+                    _so.data.dto.authetication.username = aes.Decrypt(_so.data.dto.authetication.username);
+                    _so.data.dto.authetication.password = null;
+                    _so.message.Success();
                 }
             }
             catch (Exception e)
             {
-                _so.mo.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.mo.listMessage.Add("ERROR_EXCEPTION:" + e.Message);
-                _so.mo.Error();
+                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
+                _so.message.listMessage.Add("ERROR_EXCEPTION:" + e.Message);
+                _so.message.Error();
             }
             return _so;
         }
         
-        //falta comprobar
         [Authorize(Roles="Admin,Other,Logged")]
         [HttpPut]
         [Route("[action]")]
@@ -106,48 +108,55 @@ namespace apprecipes.Controllers
         {
             try
             {
-                _so.mo = ValidateDto(so.dto, new List<string>() 
+                string accessToken = Request.Headers["Authorization"].ToString();
+                string userIdString = TokenUtils.GetUserIdFromAccessToken(accessToken);
+                Guid idUser = new Guid(userIdString);
+                
+                _so.message = ValidateDto(so.data.dto, new List<string>() 
                 {
-                    nameof(so.dto.id),
-                    nameof(so.dto.firstName),
-                    nameof(so.dto.lastName),
-                    nameof(so.dto.email),
-                    nameof(so.dto.authetication.username),
-                    nameof(so.dto.authetication.password)
+                    nameof(so.data.dto.firstName),
+                    nameof(so.data.dto.lastName),
+                    nameof(so.data.dto.email),
+                    nameof(so.data.dto.authetication.username)
                 });
                 
                 QUser qUser = new();
                 EncryptWithAes aes = new();
-                DtoUser? user = qUser.GetByUsername(aes.Encrypt(so.dto.authetication.username));
-                if (user != null && BCrypt.Net.BCrypt.Verify(so.dto.authetication.password, user.authetication.password))
+                DtoUser? userUsername = qUser.GetByUsername(aes.Encrypt(so.data.dto.authetication.username));
+                if (userUsername != null && 
+                    aes.Decrypt(userUsername.authetication.username) == so.data.dto.authetication.username
+                    && idUser != userUsername.id)
                 {
-                    _so.mo.listMessage.Add($"Este usuario ({so.dto.authetication.username}) ya existe.");
-                    _so.mo.Warning();
+                    _so.message.listMessage.Add($"Este usuario ({so.data.dto.authetication.username}) ya se encuentra registrado en el sistema.");
+                    _so.message.Warning();
                     return _so;
                 }
-                if (user != null && aes.Decrypt(user.email) == so.dto.email)
+                DtoUser? userEmail = qUser.GetByEmail(aes.Encrypt(so.data.dto.email));
+                if (userEmail != null && aes.Decrypt(userEmail.email) == so.data.dto.email && idUser != userEmail.id)
                 {
-                    _so.mo.listMessage.Add($"Este correo ({so.dto.email}) ya existe.");
-                    _so.mo.Warning();
+                    _so.message.listMessage.Add($"Este correo ({so.data.dto.email}) ya se encuentra registrado en el sistema.");
+                    _so.message.Warning();
                     return _so;
                 }
-                if (so.dto != null)
+                
+                DtoUser user = qUser.GetById(idUser);
+                if (so.data.dto != null)
                 {
-                    so.dto.authetication.username = aes.Encrypt(so.dto.authetication.username);
-                    so.dto.authetication.password = BCrypt.Net.BCrypt.HashPassword(so.dto.authetication.password);
-                    so.dto.idAuthentication = user.authetication.id;
-                    so.dto.email = aes.Encrypt(so.dto.email);
-                    so.dto.updatedAt = DateTime.UtcNow;
+                    user.firstName = so.data.dto.firstName;
+                    user.lastName = so.data.dto.lastName;
+                    user.email = aes.Encrypt(so.data.dto.email);
+                    user.authetication.username = aes.Encrypt(so.data.dto.authetication.username);
+                    user.updatedAt = DateTime.UtcNow;
             
-                    qUser.Update(so.dto);
-                    _so.mo.Success();
+                    qUser.Update(user);
+                    _so.message.Success();
                 }
             }
             catch (Exception ex)
             {
-                _so.mo.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.mo.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.mo.Error();
+                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
+                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
+                _so.message.Error();
             }
             return _so;
         }

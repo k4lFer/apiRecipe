@@ -1,6 +1,7 @@
 using apprecipes.DataAccess.Connection;
 using apprecipes.DataAccess.Entity;
 using apprecipes.DataTransferObject.Object;
+using Microsoft.EntityFrameworkCore;
 
 namespace apprecipes.DataAccess.Query
 {
@@ -17,6 +18,15 @@ namespace apprecipes.DataAccess.Query
         {
             using DataBaseContext dbc = new();
             return dbc.Authentications.Any(u => u.username == username);
+        }
+        
+        public DtoUser GetUserByIdUsername(string username)
+        {
+            using DataBaseContext dbc = new();
+            Authentication? authentication = dbc.Authentications.FirstOrDefault(a => a.username == username);
+            User? user = dbc.Users.Include(u => u.ChildAthentication)
+                .FirstOrDefault(u => u.idAuthentication == authentication.id);
+            return AutoMapper.mapper.Map<DtoUser>(user);
         }
     }
 }

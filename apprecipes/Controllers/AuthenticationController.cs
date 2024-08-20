@@ -1,5 +1,6 @@
 using apprecipes.Config;
 using apprecipes.DataAccess.Query;
+using apprecipes.DataTransferObject.Object;
 using apprecipes.DataTransferObject.OtherObject;
 using apprecipes.Generic;
 using apprecipes.Helper;
@@ -18,58 +19,62 @@ namespace apprecipes.Controllers
         {
             try
             {
-                _so.mo = ValidateDto(so.authetication, new List<string>() 
+                _so.message = ValidateDto(so.data.dto, new List<string>() 
                 { 
-                    nameof(so.authetication.username), 
-                    nameof(so.authetication.password)
+                    nameof(so.data.dto.username), 
+                    nameof(so.data.dto.password)
                 });
 
-                if (_so.mo.ExistsMessage())
+                if (_so.message.ExistsMessage())
                 {
                     return _so;
                 }
                 
                 QAuthentication qAuthentication = new QAuthentication();
                 EncryptWithAes aes = new();
-                if (!qAuthentication.ExistByUsername(aes.Encrypt(so.authetication.username)))
+                if (!qAuthentication.ExistByUsername(aes.Encrypt(so.data.dto.username)))
                 {
-                    _so.mo.listMessage.Add("Este usuario no se encuentra registrado en el sistema.");
-                    _so.mo.Error();
+                    _so.message.listMessage.Add("Este usuario no se encuentra registrado en el sistema.");
+                    _so.message.Error();
                     return _so;
                 }
                 
-                _so.authetication = qAuthentication.GetByUsername(aes.Encrypt(so.authetication.username));
+                _so.data.dto = qAuthentication.GetByUsername(aes.Encrypt(so.data.dto.username));
                 
-                if (!_so.authetication.status)
+                if (!_so.data.dto.status)
                 {
-                    _so.authetication = null;
-                    _so.mo.listMessage.Add("Este usuario está deshabilitado.");
-                    _so.mo.Warning();
+                    _so.data.dto = null;
+                    _so.message.listMessage.Add("Este usuario está deshabilitado.");
+                    _so.message.Warning();
                     return _so;
                 }
                 
-                if (BCrypt.Net.BCrypt.Verify( so.authetication.password, _so.authetication.password))
+                DtoUser user = qAuthentication.GetUserByIdUsername(aes.Encrypt(so.data.dto.username));
+                if (BCrypt.Net.BCrypt.Verify( so.data.dto.password, _so.data.dto.password) && user != null)
                 {
-                    _so.authetication.username = aes.Decrypt(_so.authetication.username);
-                    _so.authetication.password = null;
-                    _so.tokens.accessToken = await TokenUtils.GenerateAccessToken(_so.authetication);
-                    _so.tokens.refreshToken = await TokenUtils.GenerateRefreshToken(_so.authetication);
-                    _so.mo.listMessage.Add("Bienvenido al sistema.");
-                    _so.mo.Success();
+                    user.authetication.username = aes.Decrypt(user.authetication.username);
+                    _so.data.additional  = new Tokens {
+                        accessToken = await TokenUtils.GenerateAccessToken(user),
+                        refreshToken = await TokenUtils.GenerateRefreshToken(user)
+                    };
+                    _so.data.dto.username = aes.Decrypt(_so.data.dto.username);
+                    _so.data.dto.password = null;
+                    _so.message.listMessage.Add("Bienvenido al sistema.");
+                    _so.message.Success();
                 }
                 else
                 {
-                    _so.authetication = null;
-                    _so.mo.listMessage.Add("Usuario o contraseña incorrecta, verifique.");
-                    _so.mo.Error();
+                    _so.data.dto = null;
+                    _so.message.listMessage.Add("Usuario o contraseña incorrecta, verifique.");
+                    _so.message.Error();
                 }
 
             }
             catch (Exception ex)
             {
-                _so.mo.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.mo.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.mo.Error();
+                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
+                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
+                _so.message.Error();
             }
             return _so;
         }
@@ -81,20 +86,24 @@ namespace apprecipes.Controllers
         {
             try
             {
-                if (so.refreshToken != null)
+                if (!string.IsNullOrEmpty(so.refreshToken))
                 {
                     var (tokenResponse, messages) = await TokenUtils.GenerateAccessTokenFromRefreshToken(
                         so.refreshToken, AppSettings.GetRefreshJwtSecret());
-                    _so.tokens = tokenResponse;
-                    _so.mo = messages;
+                    _so.data.additional = tokenResponse;
+                    _so.message = messages;
                     return _so;
                 }
+                _so.data = null;
+                _so.message.listMessage.Add("Proporcione el (Refresh Token).");
+                _so.message.Error();
+                return _so;
             }
             catch (Exception ex)
             {
-                _so.mo.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.mo.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.mo.Error();
+                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
+                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
+                _so.message.Error();
             }
             return _so;
         }

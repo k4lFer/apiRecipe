@@ -30,18 +30,26 @@ namespace apprecipes.DataAccess.Query
                 .FirstOrDefault(u => u.idAuthentication == dbc.Authentications.Find(id).id);
             return AutoMapper.mapper.Map<DtoUser>(user);
         }
-
-
+        
+        public DtoUser GetById(Guid id)
+        {
+            using DataBaseContext dbc = new();
+            User? user = dbc.Users.Include(u => u.ChildAthentication).FirstOrDefault(u => u.id == id);
+            return AutoMapper.mapper.Map<DtoUser>(user);
+        }
         
         public DtoUser GetByUsername(string username)
         {
             using DataBaseContext dbc = new();
-            User? user = dbc.Users
-                .Include(u => u.ChildAthentication)
-                .FirstOrDefault(u => u.ChildAthentication.username == username);
-
+            User? user = dbc.Users.Include(u => u.ChildAthentication).FirstOrDefault(u => u.ChildAthentication.username == username);
             return AutoMapper.mapper.Map<DtoUser>(user);
-            
+        }
+        
+        public DtoUser GetByEmail(string email)
+        {
+            using DataBaseContext dbc = new();
+            User? user = dbc.Users.Include(u => u.ChildAthentication).FirstOrDefault(u => u.email == email);
+            return AutoMapper.mapper.Map<DtoUser>(user);
         }
         
         public int Update(DtoUser dto)

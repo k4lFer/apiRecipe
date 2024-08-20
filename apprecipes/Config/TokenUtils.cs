@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using apprecipes.DataTransferObject.EnumObject;
 using apprecipes.DataTransferObject.Object;
+using apprecipes.DataTransferObject.ObjectEnum;
 using apprecipes.DataTransferObject.OtherObject;
 using apprecipes.Helper;
 using Microsoft.IdentityModel.Tokens;
@@ -11,7 +11,7 @@ namespace apprecipes.Config
 {
     public class TokenUtils
     {
-        public static Task<string> GenerateAccessToken(DtoAuthentication user)
+        public static Task<string> GenerateAccessToken(DtoUser user)
         {
             SymmetricSecurityKey authSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(AppSettings.GetAccessJwtSecret())
@@ -20,7 +20,7 @@ namespace apprecipes.Config
             List<Claim> claims =
             [
                 new Claim("id", user.id.ToString()),
-                new Claim(ClaimTypes.Role, user.role.ToString())
+                new Claim(ClaimTypes.Role, user.authetication.role.ToString())
             ];
             
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
@@ -38,7 +38,7 @@ namespace apprecipes.Config
             return Task.FromResult(tokenHandler.WriteToken(token));
         }
 
-        public static Task<string>  GenerateRefreshToken(DtoAuthentication user)
+        public static Task<string>  GenerateRefreshToken(DtoUser user)
         {
             SymmetricSecurityKey authSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(AppSettings.GetRefreshJwtSecret())
@@ -47,9 +47,9 @@ namespace apprecipes.Config
             List<Claim> claims =
             [
                 new Claim("id", user.id.ToString()),
-                new Claim("username", user.username),
-                new Claim("status", user.status.ToString()),
-                new Claim(ClaimTypes.Role, user.role.ToString())
+                new Claim("username", user.authetication.username),
+                new Claim("status", user.authetication.status.ToString()),
+                new Claim(ClaimTypes.Role, user.authetication.role.ToString())
             ];
             
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
@@ -73,29 +73,33 @@ namespace apprecipes.Config
             DtoMessage message = new DtoMessage();
             try
             {
-                ClaimsPrincipal primary = await ValidateToken(refreshToken, secret);
-                if (primary == null)
+                (ClaimsPrincipal primary, bool isExpired) = await ValidateToken(refreshToken, secret);
+                if (isExpired)
                 {
-                    message.listMessage.Add("Token de actualización no recibido.");
+                    message.listMessage.Add("El token de actualización ha expirado.");
                     return (tokens, message);
                 }
-
+                if (primary == null)
+                {
+                    message.listMessage.Add("Token de actualización no recibido o no válido.");
+                    return (tokens, message);
+                }
                 Claim userClaim = primary.Claims.FirstOrDefault(c => c.Type == "id");
                 if (userClaim == null)
                 {
                     message.listMessage.Add("Token de actualización no válido.");
                     return (tokens, message);
                 }
-
-                DtoAuthentication user = new DtoAuthentication
+                DtoUser dtoUser = new DtoUser
                 {
                     id = Guid.Parse(userClaim.Value),
-                    username = primary.Claims.FirstOrDefault(c => c.Type == "username")?.Value,
-                    role = (Role)Enum.Parse(typeof(Role), primary.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value)
+                    authetication = new DtoAuthentication
+                    {
+                        role = (Role)Enum.Parse(typeof(Role), primary.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value)
+                    }
                 };
-                
                 message.Success();
-                tokens.accessToken = await GenerateAccessToken(user);
+                tokens.accessToken = await GenerateAccessToken(dtoUser);
                 tokens.refreshToken = refreshToken;
                 return (tokens, message);
             }
@@ -106,7 +110,7 @@ namespace apprecipes.Config
             }
         }
 
-        private static Task<ClaimsPrincipal> ValidateToken(string token, string secret)
+        private static Task<(ClaimsPrincipal?, bool isExpired)> ValidateToken(string token, string secret)
         {
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
             byte[] key = Encoding.ASCII.GetBytes(secret);
@@ -120,6 +124,7 @@ namespace apprecipes.Config
                 ValidAudience = AppSettings.GetOriginAudience(),
                 ClockSkew = TimeSpan.Zero
             };
+
             try
             {
                 ClaimsPrincipal primary = tokenHandler.ValidateToken(
@@ -127,34 +132,32 @@ namespace apprecipes.Config
                     validationParameters,
                     out SecurityToken validatedToken
                 );
+                bool isExpired = validatedToken is JwtSecurityToken jwtToken && jwtToken.ValidTo < DateTime.UtcNow;
                 return Task.FromResult(
-                    validatedToken is JwtSecurityToken jwtToken && jwtToken.Header.Alg.Equals(
-                        SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase)
+                    (validatedToken is JwtSecurityToken jwt && jwt.Header.Alg.Equals(
+                        SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase) && !isExpired
                         ? primary
-                        : null
+                        : null, isExpired)
                 );
+            }
+            catch (SecurityTokenExpiredException)
+            {
+                return Task.FromResult<(ClaimsPrincipal, bool)>((null, true));
             }
             catch
             {
-                return null;
+                return Task.FromResult<(ClaimsPrincipal, bool)>((null, false));
             }
         }
+
 
         public static string GetUserIdFromAccessToken(string accessToken)
         {
             String token = accessToken.Replace("Bearer ", "");
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            JwtSecurityToken jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
-            Claim accessClaim = jwtToken?.Claims.FirstOrDefault(claim => claim.Type == "id");
-
-            if (accessClaim != null)
-            {
-                return accessClaim.Value;
-            }
-            else
-            {
-                return null; 
-            }
+            JwtSecurityToken? jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+            Claim? accessClaim = jwtToken?.Claims.FirstOrDefault(claim => claim.Type == "id");
+            return accessClaim?.Value ?? string.Empty;
         }
     }
 }

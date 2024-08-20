@@ -40,7 +40,6 @@ namespace apprecipes.DataAccess.Query
         public DtoRecipe TheMostLiked()
         {
             using DataBaseContext dbc = new();
-
             Rating? mostLikedRating = dbc.Ratings
                 .OrderByDescending(rt => rt.numberLike)
                 .FirstOrDefault();
@@ -50,5 +49,12 @@ namespace apprecipes.DataAccess.Query
                 .FirstOrDefault(r => mostLikedRating != null && r.id == mostLikedRating.idRecipe);
             return AutoMapper.mapper.Map<DtoRecipe>(recipe);
         } 
+        
+        public int GiveLike(DtoLike dto)
+        {
+            using DataBaseContext dbc = new();
+            dbc.Likes.Add(AutoMapper.mapper.Map<Like>(dto));
+            return dbc.SaveChanges();
+        }
     }
 }

@@ -4,11 +4,7 @@ using apprecipes.Generic;
 
 namespace apprecipes.ServerObjet
 {
-    public class SoRecipe : SoGeneric<DtoRecipe>
+    public class SoLike : SoGeneric<DtoLike>
     {
-        public SoRecipe()
-        {
-            data.additional = new Pagination();
-        }
     }
 }

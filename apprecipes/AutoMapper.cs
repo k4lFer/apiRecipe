@@ -39,6 +39,9 @@ namespace apprecipes
                     cfg.CreateMap<DtoRecipe, Recipe>().MaxDepth(3)
                         .ForMember(dest => dest.ChildImages, opt => opt.MapFrom(src => src.images))
                         .ForMember(dest => dest.ChildVideos, opt => opt.MapFrom(src => src.videos));
+                    
+                    cfg.CreateMap<Like, DtoLike>().MaxDepth(3);
+                    cfg.CreateMap<DtoLike, Like>().MaxDepth(3);
                 });
                 mapper = configuration.CreateMapper();
                 _initMapper = false;
