@@ -3,7 +3,8 @@ using apprecipes.Generic;
 
 namespace apprecipes.ServerObjet
 {
-    public class SoUser : SoGeneric<DtoUser>
+    public class SoRating : SoGeneric<DtoRating>
     {
+        
     }
 }

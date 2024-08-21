@@ -1,4 +1,4 @@
-using apprecipes.DataTransferObject.EnumObject;
+using apprecipes.DataTransferObject.ObjectEnum;
 
 namespace apprecipes.DataTransferObject.Object
 {

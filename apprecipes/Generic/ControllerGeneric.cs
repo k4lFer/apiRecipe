@@ -20,21 +20,41 @@ namespace apprecipes.Generic
         protected DtoMessage ValidateDto(object dto, List<string> listField)
         {
             DtoMessage dtoMessage = new DtoMessage();
+            List<string> errors = new List<string>();
+    
             ModelState.Clear();
             TryValidateModel(dto);
-            foreach (string item in listField)
+
+            foreach (string fieldName in listField)
             {
-                ModelStateEntry modelStateEntry;
-                ModelState.TryGetValue(item, out modelStateEntry);
-                if (modelStateEntry != null && modelStateEntry.Errors.Count > 0)
+                var propertyInfo = dto.GetType().GetProperty(fieldName);
+                if (propertyInfo != null)
                 {
-                    dtoMessage.listMessage.AddRange(modelStateEntry.Errors.Select(S => S.ErrorMessage).ToList());
+                    var value = propertyInfo.GetValue(dto);
+
+                    if (propertyInfo.PropertyType == typeof(Guid))
+                    {
+                        if ((Guid)value == Guid.Empty)
+                        {
+                            errors.Add($"El campo {fieldName} es obligatorio.");
+                        }
+                    }
+                }
+
+                ModelState.TryGetValue(fieldName, out ModelStateEntry modelState);
+
+                if (modelState is not null && modelState.Errors.Count > 0)
+                {
+                    errors.AddRange(modelState.Errors.Select(er => $"El campo {fieldName} es obligatorio.").ToList());
                 }
             }
-            if (dtoMessage.ExistsMessage())
+
+            if (errors.Count > 0)
             {
+                dtoMessage.listMessage = errors;
                 dtoMessage.Error();
             }
+
             return dtoMessage;
         }
     }

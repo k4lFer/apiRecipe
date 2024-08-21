@@ -2,15 +2,15 @@ using apprecipes.DataTransferObject.OtherObject;
 
 namespace apprecipes.Generic
 {
-    public class SoGeneric<Dto>
+    public class SoGeneric<T>
     {
+        public DtoMessage message { get; set; }
+        public DtoContainer<T> data { get; set; }
+
         public SoGeneric()
         {
-            mo = new DtoMessage();
+            message = new DtoMessage();
+            data = new DtoContainer<T>();
         }
-
-        public DtoMessage mo { get; set; }
-        public Dto dto { get; set; }
-        public List<Dto> listDto { get; set; }
     }
 }

@@ -4,11 +4,11 @@ using apprecipes.Generic;
 
 namespace apprecipes.ServerObjet
 {
-    public class SoAuthentication : SoGeneric<DtoAuthentication>
+    public class SoRecipe : SoGeneric<DtoRecipe>
     {
-        public SoAuthentication()
+        public SoRecipe()
         {
-            data.additional = new Tokens();
+            data.additional = new Pagination();
         }
     }
 }
