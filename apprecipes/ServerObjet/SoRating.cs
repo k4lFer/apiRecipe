@@ -1,10 +1,10 @@
 using apprecipes.DataTransferObject.Object;
-using apprecipes.DataTransferObject.OtherObject;
 using apprecipes.Generic;
 
 namespace apprecipes.ServerObjet
 {
-    public class SoLike : SoGeneric<DtoLike>
+    public class SoRating : SoGeneric<DtoRating>
     {
+        
     }
 }

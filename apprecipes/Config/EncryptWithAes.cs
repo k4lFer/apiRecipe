@@ -5,8 +5,8 @@ namespace apprecipes.Config
 {
     public class EncryptWithAes
     {
-        private static readonly byte[] Key = Encoding.UTF8.GetBytes("12345678901234567890123456789012"); // 32 bytes (256 bits) key
-        private static readonly byte[] Iv = Encoding.UTF8.GetBytes("1234567890123456"); // 16 bytes (128 bits) IV
+        private static readonly byte[] Key = Convert.FromBase64String("7IjV+5GhVDyC9iVoru05JYxtcvhqyuZQpje1WVJZU1E="); // 32 bytes (256 bits) key
+        private static readonly byte[] Iv = Convert.FromBase64String("nWQVjAt3VPlNXyA4pKJDDw=="); // 16 bytes (128 bits) IV
 
         public string Encrypt(string plainText)
         {

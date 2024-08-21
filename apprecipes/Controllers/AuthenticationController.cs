@@ -25,10 +25,7 @@ namespace apprecipes.Controllers
                     nameof(so.data.dto.password)
                 });
 
-                if (_so.message.ExistsMessage())
-                {
-                    return _so;
-                }
+                if (_so.message.ExistsMessage()) return _so;
                 
                 QAuthentication qAuthentication = new QAuthentication();
                 EncryptWithAes aes = new();

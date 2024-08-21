@@ -72,6 +72,9 @@ namespace apprecipes.DataAccess.Connection
                 entity.HasMany(e => e.ChildVideos)
                     .WithOne(v => v.ParentRecipe)
                     .HasForeignKey(v => v.idRecipe);
+                entity.HasOne(e => e.ChildRating)
+                    .WithOne(v => v.ParentRecipe)
+                    .HasForeignKey<Rating>(v => v.idRecipe);
             });
         }
 

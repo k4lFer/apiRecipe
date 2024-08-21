@@ -27,7 +27,7 @@ namespace apprecipes.DataAccess.Query
             using DataBaseContext dbc = new();
             var user = dbc.Users
                 .Include(u => u.ChildAthentication)
-                .FirstOrDefault(u => u.idAuthentication == dbc.Authentications.Find(id).id);
+                .FirstOrDefault(u => u.id == id);
             return AutoMapper.mapper.Map<DtoUser>(user);
         }
         

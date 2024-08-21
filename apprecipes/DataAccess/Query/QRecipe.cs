@@ -46,15 +46,9 @@ namespace apprecipes.DataAccess.Query
             Recipe? recipe = dbc.Recipes
                 .Include(r => r.ChildImages)
                 .Include(r => r.ChildVideos)
+                .Include(r=>r.ChildRating)
                 .FirstOrDefault(r => mostLikedRating != null && r.id == mostLikedRating.idRecipe);
             return AutoMapper.mapper.Map<DtoRecipe>(recipe);
         } 
-        
-        public int GiveLike(DtoLike dto)
-        {
-            using DataBaseContext dbc = new();
-            dbc.Likes.Add(AutoMapper.mapper.Map<Like>(dto));
-            return dbc.SaveChanges();
-        }
     }
 }

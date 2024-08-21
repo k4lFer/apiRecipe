@@ -14,9 +14,9 @@ namespace apprecipes.DataAccess.Entity
         public string description { get; set; }
         public string instruction { get; set; }
         public string ingredient { get; set; }
-        public DateTime preparation { get; set; }
-        public DateTime cooking { get; set; }
-        public DateTime estimated { get; set; }
+        public string preparation { get; set; }
+        public string cooking { get; set; }
+        public string estimated { get; set; }
         public Difficulty difficulty { get; set; }
         public Guid? createdBy { get; set; }
         public Guid? updatedBy { get; set; }
@@ -28,6 +28,7 @@ namespace apprecipes.DataAccess.Entity
         #region childs
         public ICollection<Image> ChildImages { get; set; } = new List<Image>();
         public ICollection<Video> ChildVideos { get; set; } = new List<Video>();
+        public Rating ChildRating { get; set; }
         #endregion
     }
 }

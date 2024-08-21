@@ -49,42 +49,6 @@ namespace apprecipes.Controllers
             return _so;
         }
 
-        [Authorize(Roles="Logged")]
-        [HttpPatch]
-        [Route("[action]")]
-        public ActionResult<SoRecipe> Like( [FromBody]SoLike so)
-        {
-            try
-            {
-                string accessToken = Request.Headers["Authorization"].ToString();
-                string userIdString = TokenUtils.GetUserIdFromAccessToken(accessToken);
-                Guid idUser = new Guid(userIdString);
-                if (idUser == Guid.Empty)
-                {
-                    _so.message.listMessage.Add("Access Token no identificado.");
-                    _so.message.Warning();
-                    return _so;
-                }
-                
-                so.data.dto.idUser = idUser;
-                _so.message = ValidateDto(so.data.dto, new List<string>() 
-                {
-                    nameof(so.data.dto.idRecipe),
-                });
-                
-                QRecipe qRecipe = new();
-                qRecipe.GiveLike(so.data.dto);
-                _so.message.Success();
-            }
-            catch (Exception ex)
-            {
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
-            }
-            return _so;
-        }
-        
         [Authorize(Roles="Admin")]
         [HttpPost]
         [Route("[action]")]
@@ -104,6 +68,11 @@ namespace apprecipes.Controllers
                     nameof(so.data.dto.images),
                     nameof(so.data.dto.videos),
                 });
+                
+                if (_so.message.ExistsMessage())
+                {
+                    return _so;
+                }
                 QRecipe qRecipe = new();
             }
             catch (Exception ex)

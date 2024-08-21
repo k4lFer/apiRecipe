@@ -34,7 +34,8 @@ namespace apprecipes
                     
                     cfg.CreateMap<Recipe, DtoRecipe>().MaxDepth(3)
                         .ForMember(dest => dest.images, opt => opt.MapFrom(src => src.ChildImages))
-                        .ForMember(dest => dest.videos, opt => opt.MapFrom(src => src.ChildVideos));
+                        .ForMember(dest => dest.videos, opt => opt.MapFrom(src => src.ChildVideos))
+                        .ForMember(dest => dest.rating, opt => opt.MapFrom(src => src.ChildRating));
                     
                     cfg.CreateMap<DtoRecipe, Recipe>().MaxDepth(3)
                         .ForMember(dest => dest.ChildImages, opt => opt.MapFrom(src => src.images))
@@ -42,6 +43,9 @@ namespace apprecipes
                     
                     cfg.CreateMap<Like, DtoLike>().MaxDepth(3);
                     cfg.CreateMap<DtoLike, Like>().MaxDepth(3);
+                    
+                    cfg.CreateMap<Rating, DtoRating>().MaxDepth(3);
+                    cfg.CreateMap<DtoRating, Rating>().MaxDepth(3);
                 });
                 mapper = configuration.CreateMapper();
                 _initMapper = false;

@@ -58,7 +58,6 @@ CREATE TABLE `likes` (
 CREATE TABLE `ratings` (
   `id` char(36) PRIMARY KEY NOT NULL,
   `idRecipe` char(36) NOT NULL,
-  `comment` text NOT NULL,
   `numberLike` BIGINT DEFAULT 0,
   `createdAt` timestamp NOT NULL,
   `updatedAt` timestamp NOT NULL,
@@ -99,13 +98,10 @@ CREATE TABLE `news` (
 
 
 INSERT INTO `authentications` (`id`, `username`, `password`, `role`, `status`) VALUES 
-('374949e5-e7c7-4d2a-84b4-42478ef1648a', 'J7rXjkPaH9E0P51XCFcqJg==', '$2a$11$uCduBroDsI41ya9hpFsyPunvu2yRMVvthiFNMtgfjg1YvCd8IsPjq', 'Admin', true),
-('8f59ff5a-8bd2-4120-ab7c-8335a855cb4b', 'I3ejThLFnJ0wA9Pcl15qAg==', '$2a$11$pNcV9QXv2wEPRYsOJVlcI.cD0mScMxJlBrJ7xH9kdjWKDflSVaf92', 'Other', false);
+('acf0c71e-a204-4c14-9da9-a3ee4b9445c7', 'hHDzwaN7VXffIMW+R0dFPg==', '$2a$11$XyMVXIkU1HycGa44HkpEduFlJW8XuG3H4yGk52ix8q4cYFk558RWW', 'Admin', true),
 
 INSERT INTO `users` (`id`, `idAuthentication`, `firstName`, `lastName`, `email`, `createdAt`, `updatedAt`) VALUES 
-('09e9f526-6727-48f0-bd9f-5562d9ff9f71', '374949e5-e7c7-4d2a-84b4-42478ef1648a', 'John', 'Doe', 'WBbOZwj0rHKgXbYxJaJ+L5n3NrbYjSi7SRPyhPUtECw=', NOW(), NOW()),
-('5f0e139c-f711-431e-b16b-2fd704f53a85', '8f59ff5a-8bd2-4120-ab7c-8335a855cb4b', 'Jane', 'Smith', 'vpHipO0uMCnVceZuUvoCJCL6PFFT3VZg5qb3PMtNTNo=', NOW(), NOW());
-
+('d0943044-2476-4ba1-bc77-d75b492217ab', 'acf0c71e-a204-4c14-9da9-a3ee4b9445c7', 'John', 'Doe Bash', 'Pv48lM21RyLEJsuI96CItnHLqwDdomzO7q1eGUAxQSI=', NOW(), NOW()),
 
 INSERT INTO categories (id, name, description) VALUES 
 ('6ffef303-f76b-478a-b9d4-ee912c6c0bcd', 'Postres', 'Recetas de postres deliciosos.'),
@@ -131,16 +127,12 @@ INSERT INTO videos (id, idRecipe, title, url, description, createdAt, updatedAt)
 ('b49e9f29-cf1c-4a1b-88ea-4c287cd216af', 'bd763f60-60f7-4b87-b740-5f3061e1f8ed', 'Preparación Bruschetta Clásica', 'https://www.youtube.com/watch?v=6rC_I879dOY', 'Video paso a paso para preparar bruschetta clásica.', NOW(), NOW()),
 ('d19f2cb3-732e-48e0-92e6-9b7e0342dcf5', '928ab6f7-4b3d-4d75-bd7d-eda2c0d92b23', 'Preparación Hummus con Pita', 'https://www.youtube.com/watch?v=S2SD5X2hy2k', 'Video tutorial para preparar hummus con pita.', NOW(), NOW());
 
-INSERT INTO ratings (id, idRecipe, comment, numberLike, createdAt, updatedAt) VALUES 
-('fbab1d42-94a3-4f89-a1c8-f3e65f1e5b7d', 'e63dd814-ef78-489c-a127-806c1df2d22d', 'Increíble tarta, perfecta para los amantes del chocolate.', 120, NOW(), NOW()),
-('cc3d9d19-c635-4533-b44d-d9a89ecfced9', '459e58c4-c303-4b02-9991-c49780a4a2d6', 'Delicioso y cremoso, con un sabor de fresa espectacular.', 95, NOW(), NOW()),
-('b2280fc1-4aeb-4d77-88f2-5dfafdfaad1b', 'bd763f60-60f7-4b87-b740-5f3061e1f8ed', 'Bruschetta perfecta como entrada, muy fácil de preparar.', 75, NOW(), NOW()),
-('dcd5f249-7756-4a7e-92e7-19c383f0ff17', '928ab6f7-4b3d-4d75-bd7d-eda2c0d92b23', 'Hummus delicioso, la combinación con pita es ideal.', 110, NOW(), NOW());
+INSERT INTO ratings (id, idRecipe, numberLike, createdAt, updatedAt) VALUES 
+('fbab1d42-94a3-4f89-a1c8-f3e65f1e5b7d', 'e63dd814-ef78-489c-a127-806c1df2d22d', 10, NOW(), NOW()),
+('cc3d9d19-c635-4533-b44d-d9a89ecfced9', '459e58c4-c303-4b02-9991-c49780a4a2d6', 15, NOW(), NOW()),
+('b2280fc1-4aeb-4d77-88f2-5dfafdfaad1b', 'bd763f60-60f7-4b87-b740-5f3061e1f8ed', 20, NOW(), NOW()),
+('dcd5f249-7756-4a7e-92e7-19c383f0ff17', '928ab6f7-4b3d-4d75-bd7d-eda2c0d92b23', 11, NOW(), NOW());
 
 
-
-SELECT `id`, `name`, `description`
-FROM categories AS p
-ORDER BY `name`
-LIMIT 2 OFFSET 0;
-
+7fzhPMLgOFlnN/JpAwgutw==
+lDVz6H57SCaKrcv+dmlNbcz5X9lWJq4c3L2Hkg4UqzE=

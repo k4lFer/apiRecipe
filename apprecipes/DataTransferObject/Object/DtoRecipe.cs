@@ -14,9 +14,9 @@ namespace apprecipes.DataTransferObject.Object
         public string description { get; set; }
         public string instruction { get; set; }
         public string ingredient { get; set; }
-        public DateTime preparation { get; set; }
-        public DateTime cooking { get; set; }
-        public DateTime estimated { get; set; }
+        public string preparation { get; set; }
+        public string cooking { get; set; }
+        public string estimated { get; set; }
         public Difficulty difficulty { get; set; }
         public Guid? createdBy { get; set; }
         public Guid? updatedBy { get; set; }
@@ -24,6 +24,7 @@ namespace apprecipes.DataTransferObject.Object
         #region childs
         public ICollection<DtoImage> images { get; set; } = new List<DtoImage>();
         public ICollection<DtoVideo> videos { get; set; } = new List<DtoVideo>();
+        public DtoRating rating { get; set; }
         #endregion
     }
 }

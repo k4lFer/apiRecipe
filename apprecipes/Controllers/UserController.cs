@@ -27,6 +27,8 @@ namespace apprecipes.Controllers
                     nameof(so.data.dto.authetication.password)
                 });
                 
+                if (_so.message.ExistsMessage()) return _so;
+                
                 QUser qUser = new();
                 EncryptWithAes aes = new();
                 DtoUser? userUsername = qUser.GetByUsername(aes.Encrypt(so.data.dto.authetication.username));
@@ -78,11 +80,9 @@ namespace apprecipes.Controllers
         {
             try
             {
-                string accessToken = Request.Headers["Authorization"].ToString();
-                string userIdString = TokenUtils.GetUserIdFromAccessToken(accessToken);
-                Guid idAuthentication = new Guid(userIdString);
+                Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
                 QUser qUser = new();
-                _so.data.dto = qUser.MyProfile(idAuthentication);
+                _so.data.dto = qUser.MyProfile(idUser);
                 if (_so.data.dto != null)
                 {
                     EncryptWithAes aes = new();
@@ -108,10 +108,7 @@ namespace apprecipes.Controllers
         {
             try
             {
-                string accessToken = Request.Headers["Authorization"].ToString();
-                string userIdString = TokenUtils.GetUserIdFromAccessToken(accessToken);
-                Guid idUser = new Guid(userIdString);
-                
+                Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
                 _so.message = ValidateDto(so.data.dto, new List<string>() 
                 {
                     nameof(so.data.dto.firstName),
@@ -119,6 +116,11 @@ namespace apprecipes.Controllers
                     nameof(so.data.dto.email),
                     nameof(so.data.dto.authetication.username)
                 });
+                
+                if (_so.message.ExistsMessage())
+                {
+                    return _so;
+                }
                 
                 QUser qUser = new();
                 EncryptWithAes aes = new();
