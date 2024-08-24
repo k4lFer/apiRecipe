@@ -11,9 +11,5 @@ namespace apprecipes.DataTransferObject.Object
         public string title { get; set; }
         public string url { get; set; }
         public string description { get; set; }
-        
-        #region parents
-        public DtoRecipe recipe { get; set; }
-        #endregion
     }
 }

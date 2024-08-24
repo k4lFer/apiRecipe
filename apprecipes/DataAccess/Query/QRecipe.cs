@@ -82,6 +82,13 @@ namespace apprecipes.DataAccess.Query
             return AutoMapper.mapper.Map<DtoRecipe>(recipe);
         }
 
+        public List<DtoRecipe> GetAll()
+        {
+            using DataBaseContext dbc = new();
+            return AutoMapper.mapper.Map<List<DtoRecipe>>(dbc.Recipes.OrderBy(ob => ob.updatedAt).ToList());
+        }
+
+        
         public int CreateRecipe(DtoRecipe dtoRecipe, Guid idUser)
         {
             using DataBaseContext dbc = new();
@@ -173,6 +180,27 @@ namespace apprecipes.DataAccess.Query
                         updatedAt = DateTime.UtcNow
                     });
                 }
+            }
+            
+            return dbc.SaveChanges();
+        }
+        
+        public int DeleteOnCascade(Guid id)
+        {
+            using DataBaseContext dbc = new();
+            Recipe? recipe = dbc.Recipes
+                .Include(i => i.ChildImages)
+                .Include(v => v.ChildVideos)
+                .Include(r => r.ChildRating)
+                .FirstOrDefault(r => r.id == id);
+            if (recipe != null)
+            {
+                dbc.RemoveRange(recipe.ChildImages);
+                if (recipe.ChildVideos != null) dbc.RemoveRange(recipe.ChildVideos);
+                dbc.RemoveRange(recipe.ChildRating);
+                List<Like> likes = dbc.Likes.Where(l => l.idRecipe == id).ToList();
+                dbc.Likes.RemoveRange(likes);
+                dbc.Recipes.Remove(recipe);
             }
             
             return dbc.SaveChanges();

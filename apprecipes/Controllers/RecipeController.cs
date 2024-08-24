@@ -54,7 +54,7 @@ namespace apprecipes.Controllers
         
         [AllowAnonymous]
         [HttpGet]
-        [Route("[action]")]
+        [Route("[action]/{id}")]
         public ActionResult<SoRecipe> GetById( Guid id )
         {
             try
@@ -86,6 +86,28 @@ namespace apprecipes.Controllers
                 _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
                 _so.message.Error();
             }
+            return _so;
+        }
+        
+        [Authorize(Roles = "Admin,Other")]
+        [HttpPut]
+        [Route("[action]")]
+        public ActionResult<SoRecipe> GetAll()
+        {
+            try
+            {
+                QRecipe qRecipe = new();
+                _so.data.listDto = qRecipe.GetAll();
+                _so.message.Success();
+            }
+            catch (Exception e)
+            {
+                _so.data.dto = null;
+                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
+                _so.message.listMessage.Add("ERROR_EXCEPTION:" + e.Message);
+                _so.message.Error();
+            }
+
             return _so;
         }
 
@@ -285,6 +307,64 @@ namespace apprecipes.Controllers
                 _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
                 _so.message.Error();
             }
+            return _so;
+        }
+        
+        [Authorize(Roles="Admin")]
+        [HttpDelete]
+        [Route("[action]/{id}/{password}")]
+        public ActionResult<SoRecipe> Delete(Guid id, string password)
+        {
+            try
+            {
+                _so.data.dto = null;
+                Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
+                QRecipe qRecipe = new QRecipe();
+                if (id == Guid.Empty || id.ToString() == "")
+                {
+                    _so.message.listMessage.Add("Proporcione la ID de categoria válida.");
+                }
+                else
+                {
+                    if (!qRecipe.ExistById(id))
+                    {
+                        _so.message.listMessage.Add("Esta receta no existe seleccione una existente.");
+                    }
+                }
+
+                if (string.IsNullOrEmpty(password))
+                {
+                    _so.message.listMessage.Add("Proporcione su contraseña");
+                }
+
+                if (_so.message.ExistsMessage())
+                {
+                    _so.message.Error();
+                    return _so;
+                }
+                
+                QUser qUser = new();
+                DtoUser dtoUser = qUser.GetById(idUser);
+                if (BCrypt.Net.BCrypt.Verify( password, dtoUser.authetication.password))
+                {
+                    _so.message.listMessage.Add("Contraseña inválida.");
+                    _so.message.Error();
+                }
+                else
+                {
+                    qRecipe.DeleteOnCascade(id);
+                    _so.message.listMessage.Add("Receta eliminado correctamente.");
+                    _so.message.Success();
+                }
+            }
+            catch (Exception ex)
+            {
+                _so.data.dto = null;
+                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
+                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
+                _so.message.Error();
+            }
+
             return _so;
         }
     }
