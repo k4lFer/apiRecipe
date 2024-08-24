@@ -85,7 +85,10 @@ namespace apprecipes.DataAccess.Query
         public List<DtoRecipe> GetAll()
         {
             using DataBaseContext dbc = new();
-            return AutoMapper.mapper.Map<List<DtoRecipe>>(dbc.Recipes.OrderBy(ob => ob.updatedAt).ToList());
+            return AutoMapper.mapper.Map<List<DtoRecipe>>(dbc.Recipes
+                .Include(i => i.ChildImages)
+                .Include(v=>v.ChildVideos)
+                .OrderBy(ob => ob.updatedAt).ToList());
         }
 
         
@@ -195,11 +198,12 @@ namespace apprecipes.DataAccess.Query
                 .FirstOrDefault(r => r.id == id);
             if (recipe != null)
             {
+                List<Like> likes = dbc.Likes.Where(l => l.idRecipe == id).ToList();
+                if (likes != null) dbc.Likes.RemoveRange(likes);
+                
                 dbc.RemoveRange(recipe.ChildImages);
                 if (recipe.ChildVideos != null) dbc.RemoveRange(recipe.ChildVideos);
-                dbc.RemoveRange(recipe.ChildRating);
-                List<Like> likes = dbc.Likes.Where(l => l.idRecipe == id).ToList();
-                dbc.Likes.RemoveRange(likes);
+                if (recipe.ChildRating != null) dbc.RemoveRange(recipe.ChildRating);
                 dbc.Recipes.Remove(recipe);
             }
             

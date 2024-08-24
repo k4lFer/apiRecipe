@@ -60,6 +60,11 @@ namespace apprecipes.DataAccess.Query
             return dbc.SaveChanges();
         }
 
-
+        public List<DtoUser> GetAll()
+        {
+            using DataBaseContext dbc = new();
+            ICollection<User> users = dbc.Users.Include(u => u.ChildAthentication).OrderBy(d=>d.updatedAt).ToList();
+            return AutoMapper.mapper.Map<List<DtoUser>>(users);
+        }
     }
 }

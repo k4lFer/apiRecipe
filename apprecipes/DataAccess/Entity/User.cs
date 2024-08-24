@@ -14,5 +14,6 @@ namespace apprecipes.DataAccess.Entity
         public string email { get; set; }
         
         public Authentication ChildAthentication { get; set; }
+        public ICollection<Like> ChildlLikes { get; set; } = new List<Like>();
     }
 }

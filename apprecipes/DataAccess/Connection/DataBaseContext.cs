@@ -75,15 +75,18 @@ namespace apprecipes.DataAccess.Connection
                     .WithOne(v => v.ParentRecipe)
                     .HasForeignKey<Rating>(v => v.idRecipe);
             });
-            /*
-            modelBuilder.Entity<Image>(entity =>
+            
+            modelBuilder.Entity<Like>(entity =>
             {
-                entity.HasKey(e => e.id);
+                entity.HasKey(e => e.idRecipe);
                 entity.HasOne(e => e.ParentRecipe)
-                    .WithMany(e => e.ChildImages)
+                    .WithMany(e => e.ChildLikes)
                     .HasForeignKey(e => e.idRecipe);
+                
+                entity.HasOne(p=>p.ParentUser)
+                    .WithMany(u=>u.ChildlLikes)
+                    .HasForeignKey(u=>u.idUser);
             });
-            */
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

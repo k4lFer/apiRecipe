@@ -8,6 +8,10 @@ namespace apprecipes.DataAccess.Entity
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid idRecipe { get; set; }       
         public Guid idUser { get; set; }       
+        
+        #region parents
+        public Recipe ParentRecipe { get; set; }
+        public User ParentUser { get; set; }
+        #endregion
     }
 }
-

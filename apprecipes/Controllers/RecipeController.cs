@@ -54,7 +54,7 @@ namespace apprecipes.Controllers
         
         [AllowAnonymous]
         [HttpGet]
-        [Route("[action]/{id}")]
+        [Route("[action]")]
         public ActionResult<SoRecipe> GetById( Guid id )
         {
             try
@@ -90,7 +90,7 @@ namespace apprecipes.Controllers
         }
         
         [Authorize(Roles = "Admin,Other")]
-        [HttpPut]
+        [HttpGet]
         [Route("[action]")]
         public ActionResult<SoRecipe> GetAll()
         {
@@ -312,8 +312,8 @@ namespace apprecipes.Controllers
         
         [Authorize(Roles="Admin")]
         [HttpDelete]
-        [Route("[action]/{id}/{password}")]
-        public ActionResult<SoRecipe> Delete(Guid id, string password)
+        [Route("[action]")]
+        public ActionResult<SoRecipe> Delete(Guid id, [FromBody] PasswordRequest data)
         {
             try
             {
@@ -332,7 +332,7 @@ namespace apprecipes.Controllers
                     }
                 }
 
-                if (string.IsNullOrEmpty(password))
+                if (string.IsNullOrEmpty(data.Password))
                 {
                     _so.message.listMessage.Add("Proporcione su contraseña");
                 }
@@ -345,16 +345,16 @@ namespace apprecipes.Controllers
                 
                 QUser qUser = new();
                 DtoUser dtoUser = qUser.GetById(idUser);
-                if (BCrypt.Net.BCrypt.Verify( password, dtoUser.authetication.password))
-                {
-                    _so.message.listMessage.Add("Contraseña inválida.");
-                    _so.message.Error();
-                }
-                else
+                if (BCrypt.Net.BCrypt.Verify( data.Password, dtoUser.authetication.password))
                 {
                     qRecipe.DeleteOnCascade(id);
                     _so.message.listMessage.Add("Receta eliminado correctamente.");
                     _so.message.Success();
+                }
+                else
+                {
+                    _so.message.listMessage.Add("Contraseña inválida.");
+                    _so.message.Error();
                 }
             }
             catch (Exception ex)

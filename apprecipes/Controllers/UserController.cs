@@ -162,5 +162,35 @@ namespace apprecipes.Controllers
             }
             return _so;
         }
+        
+        [Authorize(Roles="Admin")]
+        [HttpGet]
+        [Route("[action]")]
+        public ActionResult<SoUser> GetAll()
+        {
+            try
+            {
+                QUser qUser = new();
+                EncryptWithAes aes = new();
+                _so.data.dto = null;
+                _so.data.listDto = qUser.GetAll();
+                foreach (DtoUser user in _so.data.listDto)
+                {
+                    user.idAuthentication = Guid.Empty;
+                    user.email = aes.Decrypt(user.email);
+                    user.authetication.username = null;
+                    user.authetication.password = null;
+                }
+                _so.message.Success();
+            }
+            catch (Exception e)
+            {
+                _so.data.dto = null;
+                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
+                _so.message.listMessage.Add("ERROR_EXCEPTION:" + e.Message);
+                _so.message.Error();
+            }
+            return _so;
+        }
     }
 }

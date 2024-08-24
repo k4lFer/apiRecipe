@@ -6,9 +6,6 @@ namespace apprecipes.ServerObjet
 {
     public class SoCategory : SoGeneric<DtoCategory>
     {
-        public SoCategory()
-        {
-            data.additional = new Pagination();
-        }
+        
     }
 }

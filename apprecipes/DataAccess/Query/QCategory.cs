@@ -30,6 +30,12 @@ namespace apprecipes.DataAccess.Query
             return (listDtoCategories, pagination);
         }
         
+        public List<DtoCategory> GetAll()
+        {
+            using DataBaseContext dbc = new();
+            return AutoMapper.mapper.Map<List<DtoCategory>>(dbc.Categories.OrderBy(ob => ob.name).ToList());
+        }
+        
         public bool ExistCategoryById(Guid id)
         {
             using DataBaseContext dbc = new();

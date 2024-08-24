@@ -28,6 +28,8 @@ namespace apprecipes.DataAccess.Entity
         #region childs
         public ICollection<Image> ChildImages { get; set; } = new List<Image>();
         public ICollection<Video>? ChildVideos { get; set; } = new List<Video>();
+        
+        public ICollection<Like> ChildLikes { get; set; } = new List<Like>();
         public Rating ChildRating { get; set; }
         #endregion
     }
