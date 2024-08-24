@@ -1,3 +1,4 @@
+using System.Reflection;
 using apprecipes.DataTransferObject.OtherObject;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,20 +28,6 @@ namespace apprecipes.Generic
 
             foreach (string fieldName in listField)
             {
-                var propertyInfo = dto.GetType().GetProperty(fieldName);
-                if (propertyInfo != null)
-                {
-                    var value = propertyInfo.GetValue(dto);
-
-                    if (propertyInfo.PropertyType == typeof(Guid))
-                    {
-                        if ((Guid)value == Guid.Empty)
-                        {
-                            errors.Add($"El campo {fieldName} es obligatorio.");
-                        }
-                    }
-                }
-
                 ModelState.TryGetValue(fieldName, out ModelStateEntry modelState);
 
                 if (modelState is not null && modelState.Errors.Count > 0)

@@ -29,5 +29,11 @@ namespace apprecipes.DataAccess.Query
             };
             return (listDtoCategories, pagination);
         }
+        
+        public bool ExistCategoryById(Guid id)
+        {
+            using DataBaseContext dbc = new();
+            return dbc.Categories.Any(w => w.id == id);
+        }
     }
 }

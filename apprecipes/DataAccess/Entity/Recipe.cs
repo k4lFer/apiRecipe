@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using apprecipes.DataAccess.Generic;
-using apprecipes.DataTransferObject.EnumObject;
+using apprecipes.DataTransferObject.ObjectEnum;
 
 namespace apprecipes.DataAccess.Entity
 {
@@ -27,7 +27,7 @@ namespace apprecipes.DataAccess.Entity
         
         #region childs
         public ICollection<Image> ChildImages { get; set; } = new List<Image>();
-        public ICollection<Video> ChildVideos { get; set; } = new List<Video>();
+        public ICollection<Video>? ChildVideos { get; set; } = new List<Video>();
         public Rating ChildRating { get; set; }
         #endregion
     }

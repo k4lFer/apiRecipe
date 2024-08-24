@@ -1,5 +1,4 @@
 using apprecipes.DataAccess.Entity;
-using apprecipes.DataTransferObject.EnumObject;
 using apprecipes.DataTransferObject.ObjectEnum;
 using apprecipes.Generic;
 using apprecipes.Helper;
@@ -76,6 +75,15 @@ namespace apprecipes.DataAccess.Connection
                     .WithOne(v => v.ParentRecipe)
                     .HasForeignKey<Rating>(v => v.idRecipe);
             });
+            /*
+            modelBuilder.Entity<Image>(entity =>
+            {
+                entity.HasKey(e => e.id);
+                entity.HasOne(e => e.ParentRecipe)
+                    .WithMany(e => e.ChildImages)
+                    .HasForeignKey(e => e.idRecipe);
+            });
+            */
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

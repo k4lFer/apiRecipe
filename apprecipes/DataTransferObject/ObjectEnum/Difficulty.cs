@@ -1,4 +1,4 @@
-namespace apprecipes.DataTransferObject.EnumObject
+namespace apprecipes.DataTransferObject.ObjectEnum
 {
     public enum Difficulty
     {

@@ -7,5 +7,9 @@ namespace apprecipes.DataTransferObject.Object
         public Guid id { get; set; }
         public Guid idRecipe { get; set; }
         public string url { get; set; }
+        
+        #region parents
+        public DtoRecipe recipe { get; set; }
+        #endregion
     }
 }
