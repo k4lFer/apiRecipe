@@ -35,6 +35,20 @@ namespace apprecipes.Generic
                     errors.AddRange(modelState.Errors.Select(er => $"El campo {fieldName} es obligatorio.").ToList());
                 }
             }
+            
+            foreach (var state in ModelState)
+            {
+                string fieldName = state.Key;
+                ModelStateEntry modelState = state.Value;
+
+                if (modelState.Errors.Count > 0)
+                {
+                    foreach (ModelError error in modelState.Errors)
+                    {
+                        errors.Add(error.ErrorMessage);
+                    }
+                }
+            }
 
             if (errors.Count > 0)
             {
