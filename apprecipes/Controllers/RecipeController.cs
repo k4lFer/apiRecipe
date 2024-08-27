@@ -25,9 +25,9 @@ namespace apprecipes.Controllers
             }
             catch (Exception ex)
             {
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(ex.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
             return _so;
         }
@@ -45,9 +45,9 @@ namespace apprecipes.Controllers
             }
             catch (Exception ex)
             {
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(ex.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
             return _so;
         }
@@ -59,11 +59,11 @@ namespace apprecipes.Controllers
         {
             try
             {
-                if (id == Guid.Empty || id.ToString() == "")
+                if (id == Guid.Empty)
                 {
                     _so.data.dto = null;
                     _so.message.listMessage.Add("Proporcione la ID de categoria válida.");
-                    return _so;
+                    return Unauthorized(_so.message);
                 }
                 
                 QRecipe qRecipe = new();
@@ -75,16 +75,15 @@ namespace apprecipes.Controllers
                 else
                 {
                     _so.data.dto = null;
-                    _so.message.listMessage.Add("Receta no existente.");
-                    _so.message.Error();
+                    _so.message.listMessage.Add("Receta no encontrada.");
+                    _so.message.Warning();
                 }
             }
             catch (Exception ex)
             {
-                _so.data.dto = null;
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(ex.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
             return _so;
         }
@@ -102,24 +101,22 @@ namespace apprecipes.Controllers
             }
             catch (Exception e)
             {
-                _so.data.dto = null;
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + e.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(e.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
-
             return _so;
         }
 
         [Authorize(Roles="Admin")]
         [HttpPost]
         [Route("[action]")]
-        public ActionResult<SoRecipe> Create([FromBody] SoRecipe so)
+        public ActionResult<DtoMessage> Create([FromBody] SoRecipe so)
         {
             try
             {
                 Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
-                _so.message = ValidateDto(so.data.dto, new List<string>() 
+                DtoMessage dataValidation  = ValidateDto(so.data.dto, new List<string>() 
                 {
                     nameof(so.data.dto.title),
                     nameof(so.data.dto.description),
@@ -129,6 +126,7 @@ namespace apprecipes.Controllers
                     nameof(so.data.dto.estimated),
                     nameof(so.data.dto.difficulty),
                 });
+                _so.message.listMessage.AddRange(dataValidation.listMessage);
 
                 if (so.data.dto.idCategory == Guid.Empty)
                 {
@@ -147,56 +145,84 @@ namespace apprecipes.Controllers
                 {
                     _so.message.listMessage.Add("Debe proporcionar al menos una imagen con URL válida.");
                 }
+                
                 foreach (DtoImage image in so.data.dto.images)
                 {
-                    if (string.IsNullOrEmpty(image.url))
+                    QImage qImage = new QImage();
+                    DtoMessage ImageValidation  = ValidateDto(image, new List<string>() 
                     {
-                        _so.message.listMessage.Add("Debe proporcionar al menos una imagen con URL válida.");
-                        break;
+                        nameof(image.url),
+                    });
+                    _so.message.listMessage.AddRange(ImageValidation.listMessage);
+                    
+                    DtoImage dtoImageTemp = qImage.GetImageByUrl(image.url);
+                    if (dtoImageTemp is not null && dtoImageTemp.url == image.url)
+                    {
+                        _so.message.Error();
+                        _so.message.listMessage.Add("Este URL de imagen para la receta ya esta registrada proporcione otro.");
+                        return Conflict( _so.message);
                     }
                 }
                 
-                if (_so.message.ExistsMessage())
+                if (so.data.dto.videos.Count > 0)
                 {
-                    _so.data.dto = null;
-                    _so.message.Error();
-                    return _so;
+                    QVideo qVideo = new();
+                    foreach (DtoVideo video in so.data.dto.videos)
+                    {
+                        DtoMessage VideoValidation  = ValidateDto(video, new List<string>() 
+                        {
+                            nameof(video.title),
+                            nameof(video.url)
+                        });
+                        _so.message.listMessage.AddRange(VideoValidation.listMessage);
+                        
+                        DtoVideo dtoVideoTemp = qVideo.GetVideoByUrl(video.url);
+                        if (dtoVideoTemp is not null && dtoVideoTemp.url == video.url)
+                        {
+                            _so.message.Error();
+                            _so.message.listMessage.Add("Este URL de video para la receta ya esta registrada proporcione otro.");
+                            return Conflict( _so.message);
+                        }
+                    }
                 }
+                
+                if (_so.message.ExistsMessage()) return BadRequest(_so.message);
 
                 QRecipe qRecipe = new();
                 if (qRecipe.ExistByTitle(so.data.dto.title))
                 {
-                    _so.data.dto = null;
                     _so.message.Error();
                     _so.message.listMessage.Add("Este título para la receta ya esta registrada proporcione otro.");
+                    return Conflict( _so.message);
                 }
                 
                 if (qRecipe.CreateRecipe(so.data.dto, idUser) != 0)
                 {
                     so.data.dto = null;
-                    _so.message.listMessage.Add("Regsitro exitoso.");
+                    _so.message.listMessage.Add("Registro exitoso.");
                     so.message.Success();
                 }
             }
             catch (Exception ex)
             {
-                _so.data.dto = null;
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(ex.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
-            return _so;
+
+            return _so.message;
         }
         
         [Authorize(Roles="Admin")]
         [HttpPut]
         [Route("[action]")]
-        public ActionResult<SoRecipe> Update([FromBody] SoRecipe so)
+        public ActionResult<DtoMessage> Update([FromBody] SoRecipe so)
         {
             try
             {
                 Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
-                _so.message = ValidateDto(so.data.dto, new List<string>() 
+
+                DtoMessage dataValidation  = ValidateDto(so.data.dto, new List<string>() 
                 {
                     nameof(so.data.dto.title),
                     nameof(so.data.dto.description),
@@ -206,6 +232,7 @@ namespace apprecipes.Controllers
                     nameof(so.data.dto.estimated),
                     nameof(so.data.dto.difficulty),
                 });
+                _so.message.listMessage.AddRange(dataValidation.listMessage);
                 
                 QCategory qCategory = new QCategory();
                 QRecipe qRecipe = new();
@@ -241,39 +268,57 @@ namespace apprecipes.Controllers
                 }
                 foreach (DtoImage image in so.data.dto.images)
                 {
-                    if (string.IsNullOrEmpty(image.url))
+                    DtoMessage ImageValidation  = ValidateDto(image, new List<string>() 
                     {
-                        _so.message.listMessage.Add("Debe proporcionar al menos una imagen con URL válida.");
-                        break;
+                        nameof(image.url),
+                    });
+                    _so.message.listMessage.AddRange(ImageValidation.listMessage);
+                }
+                
+                if (so.data.dto.videos.Count > 0)
+                {
+                    foreach (DtoVideo video in so.data.dto.videos)
+                    {
+                        DtoMessage VideoValidation  = ValidateDto(video, new List<string>() 
+                        {
+                            nameof(video.title),
+                            nameof(video.url)
+                        });
+                        _so.message.listMessage.AddRange(VideoValidation.listMessage);
                     }
                 }
                 
-                if (_so.message.ExistsMessage())
-                {
-                    _so.data.dto = null;
-                    _so.message.Error();
-                    return _so;
-                }
-                
+                if (_so.message.ExistsMessage()) return BadRequest(_so.message);
+
                 DtoRecipe dtoRecipeTemp = qRecipe.GetByTitle(so.data.dto.title);
                 if (qRecipe.GetByTitle(so.data.dto.title) is not null && 
                     dtoRecipeTemp.title == so.data.dto.title && dtoRecipeTemp.id != so.data.dto.id)
                 {
-                    _so.data.dto = null;
                     _so.message.Error();
                     _so.message.listMessage.Add("Este título para la receta ya esta registrada proporcione otro.");
+                    return Conflict( _so.message);
                 }
 
                 foreach (DtoImage image in so.data.dto.images)
                 {
+                    if (image.id == Guid.Empty)
+                    {
+                        _so.message.listMessage.Add("Proporcione la ID del imagen.");
+                    }
+                    if (!qImage.ExistImageById(image.id))
+                    {
+                        _so.message.Error();
+                        _so.message.listMessage.Add("Proporcione una ID de imagen existente.");
+                    }
+                    if (_so.message.ExistsMessage()) return BadRequest(_so.message);
+                    
                     DtoImage dtoImageTemp = qImage.GetImageByUrl(image.url);
                     DtoImage imagebyId = qImage.GetImageByIdRecipe(so.data.dto.id);
                     if (qImage.GetImageByUrl(image.url) is not null && dtoImageTemp.url == image.url && dtoImageTemp.id != imagebyId.id)
                     {
-                        _so.data.dto = null;
                         _so.message.Error();
                         _so.message.listMessage.Add("Este URL de imagen para la receta ya esta registrada proporcione otro.");
-                        return _so;
+                        return Conflict( _so.message);
                     }
                 }
 
@@ -281,14 +326,24 @@ namespace apprecipes.Controllers
                 {
                     foreach (DtoVideo video in so.data.dto.videos)
                     {
+                        if (video.id == Guid.Empty)
+                        {
+                            _so.message.listMessage.Add("Proporcione la ID del video.");
+                        }
+                        if (!qVideo.ExistVideoById(video.id))
+                        {
+                            _so.message.Error();
+                            _so.message.listMessage.Add("Proporcione una ID de video existente.");
+                        }
+                        if (_so.message.ExistsMessage()) return BadRequest(_so.message);
+                        
                         DtoVideo dtoVideoTemp = qVideo.GetVideoByUrl(video.url);
                         DtoVideo videobyId = qVideo.GetVideoByIdRecipe(so.data.dto.id);
                         if (qVideo.GetVideoByUrl(video.url) is not null && dtoVideoTemp.url == video.url && dtoVideoTemp.id != videobyId.id)
                         {
-                            _so.data.dto = null;
                             _so.message.Error();
                             _so.message.listMessage.Add("Este URL de video para la receta ya esta registrada proporcione otro.");
-                            return _so;
+                            return Conflict( _so.message);
                         }
                     }
                 }
@@ -302,12 +357,11 @@ namespace apprecipes.Controllers
             }
             catch (Exception ex)
             {
-                _so.data.dto = null;
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(ex.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
-            return _so;
+            return _so.message;
         }
         
         [Authorize(Roles="Admin")]
@@ -320,9 +374,16 @@ namespace apprecipes.Controllers
                 _so.data.dto = null;
                 Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
                 QRecipe qRecipe = new QRecipe();
-                if (id == Guid.Empty || id.ToString() == "")
+
+                DtoMessage userValidation= ValidateDto(data, new List<string>() 
                 {
-                    _so.message.listMessage.Add("Proporcione la ID de categoria válida.");
+                    nameof(data.Password),
+                });
+                _so.message.listMessage.AddRange(userValidation.listMessage);
+                
+                if (id == Guid.Empty)
+                {
+                    _so.message.listMessage.Add("Proporcione la ID de receta válida.");
                 }
                 else
                 {
@@ -332,16 +393,7 @@ namespace apprecipes.Controllers
                     }
                 }
 
-                if (string.IsNullOrEmpty(data.Password))
-                {
-                    _so.message.listMessage.Add("Proporcione su contraseña");
-                }
-
-                if (_so.message.ExistsMessage())
-                {
-                    _so.message.Error();
-                    return _so;
-                }
+                if (_so.message.ExistsMessage()) return BadRequest(_so.message);
                 
                 QUser qUser = new();
                 DtoUser dtoUser = qUser.GetById(idUser);
@@ -355,14 +407,14 @@ namespace apprecipes.Controllers
                 {
                     _so.message.listMessage.Add("Contraseña inválida.");
                     _so.message.Error();
+                    return Unauthorized(_so.message);
                 }
             }
             catch (Exception ex)
             {
-                _so.data.dto = null;
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(ex.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
 
             return _so;

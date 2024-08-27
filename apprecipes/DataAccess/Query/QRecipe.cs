@@ -19,7 +19,7 @@ namespace apprecipes.DataAccess.Query
         public bool ExistByTitle(string title)
         {
             using DataBaseContext dbc = new();
-            return dbc.Recipes.Any(w => w.title.Replace(" ", string.Empty).Equals(title.Replace(" ", string.Empty)));
+            return dbc.Recipes.Any(w => w.title.Replace(" ", string.Empty).ToLower().Equals(title.Replace(" ", string.Empty).ToLower()));
         }
         
         public bool ExistById(Guid id)
@@ -147,41 +147,23 @@ namespace apprecipes.DataAccess.Query
             
             foreach (DtoImage dtoImage in dtoRecipe.images)
             {
-                Image? existingImage = recipe.ChildImages.FirstOrDefault(img => img.url == dtoImage.url);
-                if (existingImage == null)
+                Image? existingImage = recipe.ChildImages.FirstOrDefault(img => img.id == dtoImage.id);
+                if (existingImage != null)
                 {
-                    recipe.ChildImages.Add(new Image
-                    {
-                        id = Guid.NewGuid(),
-                        idRecipe = dtoRecipe.id,
-                        url = dtoImage.url,
-                        createdAt = DateTime.UtcNow,
-                        updatedAt = DateTime.UtcNow
-                    });
+                    existingImage.url = dtoImage.url;
+                    existingImage.updatedAt = DateTime.UtcNow;
                 }
             }
 
             foreach (var dtoVideo in dtoRecipe.videos)
             {
-                Video? existingVideo = recipe.ChildVideos.FirstOrDefault(vid => vid.url == dtoVideo.url);
+                Video? existingVideo = recipe.ChildVideos.FirstOrDefault(v => v.id == dtoVideo.id);
                 if (existingVideo != null)
                 {
                     existingVideo.title = dtoVideo.title;
+                    existingVideo.url = dtoVideo.url;
                     existingVideo.description = dtoVideo.description;
                     existingVideo.updatedAt = DateTime.UtcNow;
-                }
-                else
-                {
-                    recipe.ChildVideos.Add(new Video
-                    {
-                        id = Guid.NewGuid(),
-                        idRecipe = dtoRecipe.id,
-                        url = dtoVideo.url,
-                        title = dtoVideo.title,
-                        description = dtoVideo.description,
-                        createdAt = DateTime.UtcNow,
-                        updatedAt = DateTime.UtcNow
-                    });
                 }
             }
             
@@ -208,6 +190,12 @@ namespace apprecipes.DataAccess.Query
             }
             
             return dbc.SaveChanges();
+        }
+        
+        public bool ExistByIdCategory(Guid id)
+        {
+            using DataBaseContext dbc = new();
+            return dbc.Recipes.Any(w => w.idCategory == id);
         }
     }
 }

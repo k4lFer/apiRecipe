@@ -16,5 +16,11 @@ namespace apprecipes.DataAccess.Query
             using DataBaseContext dbc = new();
             return AutoMapper.mapper.Map<DtoVideo>(dbc.Videos.FirstOrDefault(i => i.idRecipe == idRecipe));
         }
+        
+        public bool ExistVideoById(Guid id)
+        {
+            using DataBaseContext dbc = new();
+            return dbc.Videos.Any(w => w.id == id);
+        }
     }
 }

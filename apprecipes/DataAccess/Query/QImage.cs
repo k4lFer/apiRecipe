@@ -25,5 +25,11 @@ namespace apprecipes.DataAccess.Query
                 return AutoMapper.mapper.Map<List<DtoImage>>(dbc.Images.OrderBy(ob => ob.updatedAt).ToList());
             }
         }
+        
+        public bool ExistImageById(Guid id)
+        {
+            using DataBaseContext dbc = new();
+            return dbc.Images.Any(w => w.id == id);
+        }
     }
 }

@@ -11,7 +11,7 @@ namespace apprecipes.DataAccess.Entity
         public Guid idRecipe { get; set; }
         public string title { get; set; }
         public string url { get; set; }
-        public string description { get; set; }
+        public string? description { get; set; }
         
         #region parents
         public Recipe ParentRecipe { get; set; }
