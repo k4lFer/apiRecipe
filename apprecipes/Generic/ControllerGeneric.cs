@@ -1,3 +1,4 @@
+using System.Reflection;
 using apprecipes.DataTransferObject.OtherObject;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,28 +28,28 @@ namespace apprecipes.Generic
 
             foreach (string fieldName in listField)
             {
-                var propertyInfo = dto.GetType().GetProperty(fieldName);
-                if (propertyInfo != null)
-                {
-                    var value = propertyInfo.GetValue(dto);
-
-                    if (propertyInfo.PropertyType == typeof(Guid))
-                    {
-                        if ((Guid)value == Guid.Empty)
-                        {
-                            errors.Add($"El campo {fieldName} es obligatorio.");
-                        }
-                    }
-                }
-
                 ModelState.TryGetValue(fieldName, out ModelStateEntry modelState);
 
                 if (modelState is not null && modelState.Errors.Count > 0)
                 {
-                    errors.AddRange(modelState.Errors.Select(er => $"El campo {fieldName} es obligatorio.").ToList());
+                    foreach (ModelError error in modelState.Errors)
+                    {
+                        string customErrorMessage = error.ErrorMessage;
+
+                        if (customErrorMessage.Contains("required"))
+                        {
+                            customErrorMessage = "El campo es obligatorio.";
+                            //customErrorMessage = $"El campo '{fieldName}' es obligatorio.";
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(customErrorMessage))
+                        {
+                            errors.Add($"'{fieldName}': {customErrorMessage}");
+                        }
+                    }
                 }
             }
-
+            
             if (errors.Count > 0)
             {
                 dtoMessage.listMessage = errors;

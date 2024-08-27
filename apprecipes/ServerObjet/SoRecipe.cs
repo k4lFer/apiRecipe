@@ -6,9 +6,6 @@ namespace apprecipes.ServerObjet
 {
     public class SoRecipe : SoGeneric<DtoRecipe>
     {
-        public SoRecipe()
-        {
-            data.additional = new Pagination();
-        }
+
     }
 }

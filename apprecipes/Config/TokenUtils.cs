@@ -69,7 +69,6 @@ namespace apprecipes.Config
         
         public static async Task<(Tokens, DtoMessage)> GenerateAccessTokenFromRefreshToken(string refreshToken, string secret)
         {
-            Tokens tokens = new Tokens();
             DtoMessage message = new DtoMessage();
             try
             {
@@ -77,18 +76,18 @@ namespace apprecipes.Config
                 if (isExpired)
                 {
                     message.listMessage.Add("El token de actualización ha expirado.");
-                    return (tokens, message);
+                    return (null, message);
                 }
                 if (primary == null)
                 {
                     message.listMessage.Add("Token de actualización no recibido o no válido.");
-                    return (tokens, message);
+                    return (null, message);
                 }
                 Claim userClaim = primary.Claims.FirstOrDefault(c => c.Type == "id");
                 if (userClaim == null)
                 {
                     message.listMessage.Add("Token de actualización no válido.");
-                    return (tokens, message);
+                    return (null, message);
                 }
                 DtoUser dtoUser = new DtoUser
                 {
@@ -98,15 +97,17 @@ namespace apprecipes.Config
                         role = (Role)Enum.Parse(typeof(Role), primary.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value)
                     }
                 };
-                message.Success();
+                
+                Tokens tokens = new Tokens();
                 tokens.accessToken = await GenerateAccessToken(dtoUser);
                 tokens.refreshToken = refreshToken;
+                message.Success();
                 return (tokens, message);
             }
             catch (SecurityTokenException ex)
             {
                 message.listMessage.Add(ex.Message);
-                return (tokens, message);
+                return (null, message);
             }
         }
 

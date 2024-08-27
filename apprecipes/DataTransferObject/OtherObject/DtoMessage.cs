@@ -17,17 +17,22 @@ namespace apprecipes.DataTransferObject.OtherObject
 
         public void Success()
         {
-            type = "success";
+            type = "Success";
         }
 
         public void Warning()
         {
-            type = "warnig";
+            type = "Warning";
         }
 
         public void Error()
         {
-            type = "error";
+            type = "Error";
         }   
+        
+        public void Exception()
+        {
+            type = "Exception";
+        }  
     }
 }

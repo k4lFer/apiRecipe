@@ -1,6 +1,7 @@
 using apprecipes.Config;
 using apprecipes.DataAccess.Query;
 using apprecipes.DataTransferObject.Object;
+using apprecipes.DataTransferObject.OtherObject;
 using apprecipes.Generic;
 using apprecipes.ServerObjet;
 using Microsoft.AspNetCore.Authorization;
@@ -13,57 +14,57 @@ namespace apprecipes.Controllers
         [Authorize(Roles="Logged")]
         [HttpPatch]
         [Route("[action]")]
-        public async Task<ActionResult<SoRating>> Liked( [FromBody]SoRating so)
+        public async Task<ActionResult<DtoMessage>> Liked( [FromBody]DtoLikeds so)
         {
             try
             {
                 Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
-                if (idUser == Guid.Empty)
+                if (so.idRecipe == Guid.Empty)
                 {
-                    _so.message.listMessage.Add("Access Token no identificado.");
+                    _so.message.listMessage.Add("Proporcione una ID de receta válida.");
                     _so.message.Error();
-                    return _so;
+                    return BadRequest(_so.message);
                 }
-                
-                _so.message = ValidateDto(so.data.dto, new List<string> { nameof(so.data.dto.idRecipe) });
-                if (_so.message.ExistsMessage()) return _so;
-                
-                if (so.data.dto.idRecipe == Guid.Empty)
+
+                QRecipe qRecipe = new();
+                if (!qRecipe.ExistById(so.idRecipe))
                 {
-                    _so.message.listMessage.Add("Proporcione una id de receta valida.");
+                    _so.message.listMessage.Add("La receta no se encuentra disponible.");
                     _so.message.Error();
-                    return _so;
+                    return Conflict(_so.message);
                 }
                 
                 QLike qLike = new();
-                if (await qLike.HasUserLikedRecipeAsync(idUser, so.data.dto.idRecipe))
+                if (await qLike.HasUserLikedRecipeAsync(idUser, so.idRecipe))
                 {
                     _so.message.listMessage.Add("Usted ya le dio me gusta a esta receta.");
                     _so.message.Warning();
-                    return _so;
+                    return Unauthorized(_so.message);
                 }
 
                 QRating qRating = new();
-                if (await qRating.IsThereRecipeRatingAsync(so.data.dto.idRecipe))
+                if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
                 {
-                    await qRating.UpdateRatingAsync(so.data.dto.idRecipe);
+                    await qRating.UpdateRatingAsync(so.idRecipe);
                 }
                 else
                 {
-                    await qRating.CreateRatingAsync(so.data.dto.idRecipe);
+                    await qRating.CreateRatingAsync(so.idRecipe);
                 }
-                DtoLike newLike = new() { idRecipe = so.data.dto.idRecipe, idUser = idUser };
-                await qLike.GiveLikeAsync(newLike);
                 
+                DtoLike newLike = new() { idRecipe = so.idRecipe, idUser = idUser };
+                
+                await qLike.GiveLikeAsync(newLike);
+                _so.message.listMessage.Add("Enhorabuena!");
                 _so.message.Success();
             }
             catch (Exception ex)
             {
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(ex.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
-            return _so;
+            return _so.message;
         }
     }
 }

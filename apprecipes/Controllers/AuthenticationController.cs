@@ -25,7 +25,7 @@ namespace apprecipes.Controllers
                     nameof(so.data.dto.password)
                 });
 
-                if (_so.message.ExistsMessage()) return _so;
+                if (_so.message.ExistsMessage()) return BadRequest(_so.message);
                 
                 QAuthentication qAuthentication = new QAuthentication();
                 EncryptWithAes aes = new();
@@ -33,7 +33,7 @@ namespace apprecipes.Controllers
                 {
                     _so.message.listMessage.Add("Este usuario no se encuentra registrado en el sistema.");
                     _so.message.Error();
-                    return _so;
+                    return Unauthorized(_so.message);
                 }
                 
                 _so.data.dto = qAuthentication.GetByUsername(aes.Encrypt(so.data.dto.username));
@@ -42,8 +42,8 @@ namespace apprecipes.Controllers
                 {
                     _so.data.dto = null;
                     _so.message.listMessage.Add("Este usuario está deshabilitado.");
-                    _so.message.Warning();
-                    return _so;
+                    _so.message.Error();
+                    return Unauthorized(_so.message);
                 }
                 
                 DtoUser user = qAuthentication.GetUserByIdUsername(aes.Encrypt(so.data.dto.username));
@@ -64,14 +64,14 @@ namespace apprecipes.Controllers
                     _so.data.dto = null;
                     _so.message.listMessage.Add("Usuario o contraseña incorrecta, verifique.");
                     _so.message.Error();
+                    return Unauthorized(_so.message);
                 }
-
             }
             catch (Exception ex)
             {
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(ex.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
             return _so;
         }
@@ -85,24 +85,29 @@ namespace apprecipes.Controllers
             {
                 if (!string.IsNullOrEmpty(so.refreshToken))
                 {
-                    var (tokenResponse, messages) = await TokenUtils.GenerateAccessTokenFromRefreshToken(
+                    var (tokens, message) = await TokenUtils.GenerateAccessTokenFromRefreshToken(
                         so.refreshToken, AppSettings.GetRefreshJwtSecret());
-                    _so.data.additional = tokenResponse;
-                    _so.message = messages;
-                    return _so;
+                    if (tokens != null)
+                    {
+                        _so.data.additional = tokens;    
+                        _so.message = message;
+                        return _so;
+                    }
+
+                    _so.message = message;
+                    _so.message.Error();
+                    return Unauthorized(_so.message);
                 }
-                _so.data = null;
                 _so.message.listMessage.Add("Proporcione el (Refresh Token).");
                 _so.message.Error();
-                return _so;
+                return BadRequest(_so.message);
             }
             catch (Exception ex)
             {
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(ex.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
-            return _so;
         }
     }
 }

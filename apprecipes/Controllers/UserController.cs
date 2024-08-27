@@ -2,6 +2,7 @@ using apprecipes.Config;
 using apprecipes.DataAccess.Query;
 using apprecipes.DataTransferObject.Object;
 using apprecipes.DataTransferObject.ObjectEnum;
+using apprecipes.DataTransferObject.OtherObject;
 using apprecipes.Generic;
 using apprecipes.ServerObjet;
 using Microsoft.AspNetCore.Authorization;
@@ -14,7 +15,7 @@ namespace apprecipes.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("[action]")]
-        public ActionResult<SoUser> Register([FromBody] SoUser so)
+        public ActionResult<DtoMessage> Register([FromBody] SoUser so)
         {
             try
             {
@@ -27,7 +28,7 @@ namespace apprecipes.Controllers
                     nameof(so.data.dto.authetication.password)
                 });
                 
-                if (_so.message.ExistsMessage()) return _so;
+                if (_so.message.ExistsMessage()) return BadRequest(_so.message);
                 
                 QUser qUser = new();
                 EncryptWithAes aes = new();
@@ -36,14 +37,14 @@ namespace apprecipes.Controllers
                 {
                     _so.message.listMessage.Add($"Este usuario ({so.data.dto.authetication.username}) ya se encuentra registrado en el sistema.");
                     _so.message.Warning();
-                    return _so;
+                    return Conflict( _so.message);
                 }
                 DtoUser? userEmail = qUser.GetByEmail(aes.Encrypt(so.data.dto.email));
                 if (userEmail != null && aes.Decrypt(userEmail.email) == so.data.dto.email)
                 {
                     _so.message.listMessage.Add($"Este correo ({so.data.dto.email}) ya se encuentra registrado en el sistema.");
                     _so.message.Warning();
-                    return _so;
+                    return Conflict( _so.message);
                 }
                 
                 if (so.data.dto != null)
@@ -60,17 +61,17 @@ namespace apprecipes.Controllers
                     so.data.dto.updatedAt = DateTime.UtcNow;
             
                     qUser.Register(so.data.dto);
-                    _so.message.listMessage.Add("Registro exitoso !.");
+                    _so.message.listMessage.Add("Registro exitoso!");
                     _so.message.Success();
                 }
             }
             catch (Exception ex)
             {
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(ex.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
-            return _so;
+            return StatusCode(200, _so.message);
         }
         
         [Authorize(Roles="Admin,Other,Logged")]
@@ -94,9 +95,9 @@ namespace apprecipes.Controllers
             }
             catch (Exception e)
             {
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + e.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(e.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
             return _so;
         }
@@ -104,41 +105,46 @@ namespace apprecipes.Controllers
         [Authorize(Roles="Admin,Other,Logged")]
         [HttpPut]
         [Route("[action]")]
-        public ActionResult<SoUser> Update([FromBody] SoUser so)
+        public ActionResult<DtoMessage> Update([FromBody] SoUser so)
         {
             try
             {
                 Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
-                _so.message = ValidateDto(so.data.dto, new List<string>() 
+                var userValidation= ValidateDto(so.data.dto, new List<string>() 
                 {
                     nameof(so.data.dto.firstName),
                     nameof(so.data.dto.lastName),
                     nameof(so.data.dto.email),
                     nameof(so.data.dto.authetication.username)
                 });
+                _so.message.listMessage.AddRange(userValidation.listMessage);
                 
-                if (_so.message.ExistsMessage())
+                var authenticationValidation = ValidateDto(so.data.dto.authetication, new List<string>() 
                 {
-                    return _so;
-                }
+                    nameof(so.data.dto.authetication.username)
+                });
+                _so.message.listMessage.AddRange(authenticationValidation.listMessage);
+                
+                if (_so.message.ExistsMessage()) return BadRequest(_so.message);
                 
                 QUser qUser = new();
                 EncryptWithAes aes = new();
                 DtoUser? userUsername = qUser.GetByUsername(aes.Encrypt(so.data.dto.authetication.username));
+                
                 if (userUsername != null && 
                     aes.Decrypt(userUsername.authetication.username) == so.data.dto.authetication.username
                     && idUser != userUsername.id)
                 {
                     _so.message.listMessage.Add($"Este usuario ({so.data.dto.authetication.username}) ya se encuentra registrado en el sistema.");
                     _so.message.Warning();
-                    return _so;
+                    return Conflict( _so.message);
                 }
                 DtoUser? userEmail = qUser.GetByEmail(aes.Encrypt(so.data.dto.email));
                 if (userEmail != null && aes.Decrypt(userEmail.email) == so.data.dto.email && idUser != userEmail.id)
                 {
                     _so.message.listMessage.Add($"Este correo ({so.data.dto.email}) ya se encuentra registrado en el sistema.");
                     _so.message.Warning();
-                    return _so;
+                    return Conflict( _so.message);
                 }
                 
                 DtoUser user = qUser.GetById(idUser);
@@ -151,16 +157,168 @@ namespace apprecipes.Controllers
                     user.updatedAt = DateTime.UtcNow;
             
                     qUser.Update(user);
+                    _so.message.listMessage.Add("Actualización exitosa!");
                     _so.message.Success();
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                _so.message.listMessage.Add("Ocurrió un error inesperado. Estamos trabajando para resolverlo.");
-                _so.message.listMessage.Add("ERROR_EXCEPTION:" + ex.Message);
-                _so.message.Error();
+                _so.message.listMessage.Add(e.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
+            }
+            return StatusCode(200, _so.message);
+        }
+        
+        [Authorize(Roles="Admin")]
+        [HttpGet]
+        [Route("[action]")]
+        public ActionResult<SoUser> GetAll()
+        {
+            try
+            {
+                QUser qUser = new();
+                EncryptWithAes aes = new();
+                _so.data.dto = null;
+                _so.data.listDto = qUser.GetAll();
+                
+                foreach (DtoUser user in _so.data.listDto)
+                {
+                    user.idAuthentication = Guid.Empty;
+                    user.email = aes.Decrypt(user.email);
+                    user.authetication.username = null;
+                    user.authetication.password = null;
+                }
+                _so.message.Success();
+            }
+            catch (Exception e)
+            {
+                _so.message.listMessage.Add(e.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
             }
             return _so;
+        }
+        
+        [Authorize(Roles="Admin,Other,Logged")]
+        [HttpPatch]
+        [Route("[action]")]
+        public ActionResult<DtoMessage> ChangePassword([FromBody] DtoPassword so)
+        {
+            try
+            {
+                Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
+                _so.message = ValidateDto(so, new List<string>() 
+                {
+                    nameof(so.oldpassword),
+                    nameof(so.newpassword)
+                });
+
+                if (_so.message.ExistsMessage()) 
+                    return BadRequest(_so.message);
+
+                QUser qUser = new();
+                DtoUser dtoUser = qUser.GetById(idUser);
+
+                if (BCrypt.Net.BCrypt.Verify(so.oldpassword, dtoUser.authetication.password))
+                {
+                    if (so.oldpassword == so.newpassword)
+                    {
+                        _so.message.listMessage.Add("Su contraseña no puede ser la misma que la anterior.");
+                        _so.message.Error();
+                        return Conflict( _so.message);
+                    }
+
+                    string newHashedPassword = BCrypt.Net.BCrypt.HashPassword(so.newpassword);
+                    if (qUser.UpdatePassword(idUser, newHashedPassword) != 0)
+                    {
+                        _so.message.listMessage.Add("Su contraseña fue cambiada con éxito.");
+                        _so.message.Success();
+                    }
+                }
+                else
+                {
+                    _so.message.listMessage.Add("Su contraseña anterior no coincide.");
+                    _so.message.Error();
+                    return Unauthorized(_so.message);
+                }
+            }
+            catch (Exception e)
+            {
+                _so.message.listMessage.Add(e.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
+            }
+            return Ok(_so.message);
+        }
+        
+        [Authorize(Roles="Admin")]
+        [HttpPut]
+        [Route("[action]")]
+        public ActionResult<DtoMessage> PromoteOrDemoteUser([FromBody] SoUser so)
+        {
+            try
+            {
+                if (so.data.dto.id == Guid.Empty)
+                {
+                    _so.message.listMessage.Add("ID de usuario no válido.");
+                    _so.message.Error();
+                    return BadRequest(_so.message);
+                }
+
+                _so.message = ValidateDto(so.data.dto.authetication, new List<string>() 
+                {
+                    nameof(so.data.dto.authetication.role),
+                });
+                
+                if (_so.message.ExistsMessage()) return BadRequest(_so.message);
+                
+                QUser qUser = new();
+                DtoUser dtoUser = qUser.GetById(so.data.dto.id);
+                if (dtoUser != null)
+                {
+                    dtoUser.authetication.role = so.data.dto.authetication.role;
+                    dtoUser.authetication.status = so.data.dto.authetication.status;
+
+                    if (qUser.UpdatePromoteOrDemote(dtoUser) != 0)
+                    {
+                        DtoUser dtoUserTemp = qUser.GetById(dtoUser.id);
+                        switch (dtoUserTemp.authetication.role)
+                        {
+                            case Role.Admin:
+                                _so.message.listMessage.Add("Ahora el usuario es un Administrador.");
+                                break;
+                            case Role.Other:
+                                _so.message.listMessage.Add("Ahora el usuario es un Moderador.");
+                                break;
+                            case Role.Logged:
+                                _so.message.listMessage.Add("Ahora el usuario es un Cliente.");
+                                break;
+                            default:
+                                _so.message.listMessage.Add("Rol desconocido.");
+                                break;
+                        }
+                        if (!dtoUserTemp.authetication.status)
+                        {
+                            _so.message.listMessage.Add("La cuenta del usuario fue desactivada.");
+                        }
+                        _so.message.Success();
+                    }
+                }
+                else
+                {
+                    _so.message.listMessage.Add("Usuario no encontrado verifique.");
+                    _so.message.Error();
+                    return Unauthorized(_so.message);
+                }
+            }
+            catch (Exception e)
+            {
+                _so.message.listMessage.Add(e.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
+            }
+            return Ok(_so.message);
         }
     }
 }

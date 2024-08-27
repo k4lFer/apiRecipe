@@ -60,6 +60,35 @@ namespace apprecipes.DataAccess.Query
             return dbc.SaveChanges();
         }
 
-
+        public List<DtoUser> GetAll()
+        {
+            using DataBaseContext dbc = new();
+            ICollection<User> users = dbc.Users.Include(u => u.ChildAthentication).OrderBy(d=>d.updatedAt).ToList();
+            return AutoMapper.mapper.Map<List<DtoUser>>(users);
+        }
+        
+        public int UpdatePassword(Guid id, string newPassword){
+            using DataBaseContext dbc = new();
+            var user = dbc.Users.Include(a=>a.ChildAthentication).FirstOrDefault(i=>i.id==id);
+            if (user != null)
+            {
+                user.ChildAthentication.password = newPassword;
+                user.updatedAt = DateTime.UtcNow;
+                dbc.Users.Update(user);
+                return dbc.SaveChanges();
+            }
+            return 0;
+        }
+        
+        public int UpdatePromoteOrDemote(DtoUser dto){
+            using DataBaseContext dbc = new();
+            User user = AutoMapper.mapper.Map<User>(dto);
+            if (user != null)
+            {
+                dbc.Users.Update(user);
+                return dbc.SaveChanges();
+            }
+            return 0;
+        }
     }
 }
