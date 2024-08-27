@@ -32,24 +32,24 @@ namespace apprecipes.Generic
 
                 if (modelState is not null && modelState.Errors.Count > 0)
                 {
-                    errors.AddRange(modelState.Errors.Select(er => $"El campo {fieldName} es obligatorio.").ToList());
-                }
-            }
-            
-            foreach (var state in ModelState)
-            {
-                string fieldName = state.Key;
-                ModelStateEntry modelState = state.Value;
-
-                if (modelState.Errors.Count > 0)
-                {
                     foreach (ModelError error in modelState.Errors)
                     {
-                        errors.Add(error.ErrorMessage);
+                        string customErrorMessage = error.ErrorMessage;
+
+                        if (customErrorMessage.Contains("required"))
+                        {
+                            customErrorMessage = "El campo es obligatorio.";
+                            //customErrorMessage = $"El campo '{fieldName}' es obligatorio.";
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(customErrorMessage))
+                        {
+                            errors.Add($"'{fieldName}': {customErrorMessage}");
+                        }
                     }
                 }
             }
-
+            
             if (errors.Count > 0)
             {
                 dtoMessage.listMessage = errors;

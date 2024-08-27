@@ -42,7 +42,7 @@ namespace apprecipes.Controllers
                 {
                     _so.data.dto = null;
                     _so.message.listMessage.Add("Este usuario está deshabilitado.");
-                    _so.message.Warning();
+                    _so.message.Error();
                     return Unauthorized(_so.message);
                 }
                 
