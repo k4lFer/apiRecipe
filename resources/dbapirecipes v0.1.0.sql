@@ -86,13 +86,15 @@ CREATE TABLE `videos` (
 
 CREATE TABLE `news` (
   `id` char(36) PRIMARY KEY,
-  `idRecipe` char(36) NOT NULL,
+  `idRecipe` char(36) NULL,
   `title` text NOT NULL,
   `subtitle` text NOT NULL,
   `content` text NOT NULL,
   `status` BOOLEAN NOT NULL,
-  `createdAt` timestamp NOT NULL,
+  `url` char(255) NOT NULL,
   `deletedAt` timestamp NOT NULL,
+  `createdAt` timestamp NOT NULL,
+  `updatedAt` timestamp NOT NULL,
   FOREIGN KEY (`idRecipe`) REFERENCES `recipes` (`id`)
 );
 

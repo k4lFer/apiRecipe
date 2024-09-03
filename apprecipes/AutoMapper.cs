@@ -46,6 +46,9 @@ namespace apprecipes
                     
                     cfg.CreateMap<Rating, DtoRating>().MaxDepth(3);
                     cfg.CreateMap<DtoRating, Rating>().MaxDepth(3);
+
+                    cfg.CreateMap<New, DtoNew>().MaxDepth(3);
+                    cfg.CreateMap<DtoNew, New>().MaxDepth(3);
                 });
                 mapper = configuration.CreateMapper();
                 _initMapper = false;

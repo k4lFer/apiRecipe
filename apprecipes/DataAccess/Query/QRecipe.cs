@@ -22,7 +22,7 @@ namespace apprecipes.DataAccess.Query
             return dbc.Recipes.Any(w => w.title.Replace(" ", string.Empty).ToLower().Equals(title.Replace(" ", string.Empty).ToLower()));
         }
         
-        public bool ExistById(Guid id)
+        public bool ExistById(Guid? id)
         {
             using DataBaseContext dbc = new();
             return dbc.Recipes.Any(w => w.id == id);
