@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using apprecipes.DataAccess.Query;
 using apprecipes.Helper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,10 @@ namespace apprecipes
 
             #region appsettings
             AppSettings.Init();
+            #endregion
+            
+            #region NewsVerificationService
+            builder.Services.AddHostedService<NewsDeletionService>();
             #endregion
             
             builder.Services.AddEndpointsApiExplorer();
@@ -101,7 +106,7 @@ namespace apprecipes
                 options.OperationFilter<SecurityRequirementsOperationFilter>();
             });
             #endregion
-
+            
             var app = builder.Build();
 
             if (app.Environment.IsDevelopment())

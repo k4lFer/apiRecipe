@@ -89,5 +89,14 @@ namespace apprecipes.DataAccess.Query
             New? x = dbc.News.FirstOrDefault(w => w.url == url);
             return AutoMapper.mapper.Map<DtoNew>(x);
         }
+        
+        public List<DtoNew> NewsWithExpiredDates()
+        {
+            using DataBaseContext dbc = new();
+            return AutoMapper.mapper.Map<List<DtoNew>>(dbc.News
+                .Where(n => n.deletedAt < DateTime.UtcNow && n.deletedAt.Hour < DateTime.UtcNow.Hour && n.deletedAt.Minute <= DateTime.UtcNow.Minute )
+                .OrderBy(ob => ob.updatedAt)
+                .ToList());
+        }
     }
 }

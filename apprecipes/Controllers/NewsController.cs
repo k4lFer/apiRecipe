@@ -146,7 +146,7 @@ namespace apprecipes.Controllers
                     _so.message.Error();
                     return Conflict( _so.message);
                 }
-                /*
+                
                 if (qNew.UpdateNew(so.data.dto) != 0)
                 {
                     _so.message.listMessage.Add("Actualización exitosa!");
@@ -156,7 +156,7 @@ namespace apprecipes.Controllers
                 {
                     _so.message.listMessage.Add("No se pudo actualizar el registro.");
                     _so.message.Warning();
-                }*/
+                }
             }
             catch (Exception ex)
             {
