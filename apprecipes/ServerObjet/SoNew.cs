@@ -1,9 +1,9 @@
 using apprecipes.DataTransferObject.Object;
 using apprecipes.Generic;
 
-namespace apprecipes.Controllers
+namespace apprecipes.ServerObjet
 {
-    public class LikeController : ControllerGeneric<DtoLike>
+    public class SoNew : SoGeneric<DtoNew>
     {
         
     }

@@ -1,5 +1,4 @@
 using apprecipes.DataAccess.Connection;
-using apprecipes.DataAccess.Entity;
 using apprecipes.DataTransferObject.Object;
 
 namespace apprecipes.DataAccess.Query
