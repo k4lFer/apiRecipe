@@ -55,6 +55,7 @@ namespace apprecipes.DataAccess.Query
                 .Take(pageSize)
                 .Include(r => r.ChildImages)
                 .Include(r => r.ChildVideos)
+                .Include(r => r.ChildRating)
                 .ToListAsync();
 
             ICollection<DtoRecipe> listDtoRecipes = AutoMapper.mapper.Map<ICollection<DtoRecipe>>(recipes);
@@ -88,6 +89,7 @@ namespace apprecipes.DataAccess.Query
             return AutoMapper.mapper.Map<List<DtoRecipe>>(dbc.Recipes
                 .Include(i => i.ChildImages)
                 .Include(v=>v.ChildVideos)
+                .Include(r=>r.ChildRating)
                 .OrderBy(ob => ob.updatedAt).ToList());
         }
 
@@ -196,6 +198,27 @@ namespace apprecipes.DataAccess.Query
         {
             using DataBaseContext dbc = new();
             return dbc.Recipes.Any(w => w.idCategory == id);
+        }
+
+        public List<DtoRecipe> RecipesYouLiked(Guid id)
+        {
+            using DataBaseContext dbc = new();
+            List<Like> likes = dbc.Likes.Where(l => l.idUser == id).ToList();
+            List<DtoRecipe> dtoRecipes = new List<DtoRecipe>();
+            foreach (Like like in likes)
+            {
+                if (like.status)
+                {
+                    Recipe? recipe = dbc.Recipes
+                        .Include(i => i.ChildImages)
+                        .Include(v => v.ChildVideos)
+                        .Include(r => r.ChildRating)
+                        .FirstOrDefault(r => r.id == like.idRecipe);
+                    
+                    dtoRecipes.Add(AutoMapper.mapper.Map<DtoRecipe>(recipe));
+                }
+            }
+            return dtoRecipes;
         }
     }
 }

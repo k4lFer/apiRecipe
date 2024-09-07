@@ -53,11 +53,13 @@ namespace apprecipes.Controllers
                         if (_requestCount == 1)
                         {
                             await qRating.UpdateRatingLikedAsync(so.idRecipe);
+                            await qLike.UpdateStatusAsync(idUser, so.idRecipe, true);
                             _so.message.listMessage.Add("Enhorabuena!");
                         }
                         if (_requestCount == 2)
                         {
                             await qRating.UpdateRatingDislikedAsync(so.idRecipe);
+                            await qLike.UpdateStatusAsync(idUser, so.idRecipe, false);
                             _so.message.listMessage.Add("Enhoramala!");
                             _requestCount = 0;
                         }
@@ -65,12 +67,13 @@ namespace apprecipes.Controllers
                     else
                     {
                         await qRating.CreateRatingAsync(so.idRecipe);
+                        await qLike.UpdateStatusAsync(idUser, so.idRecipe, true);
                         _so.message.listMessage.Add("Enhorabuena!");
                     }
                 }
                 else
                 {
-                    DtoLike newLike = new() { idRecipe = so.idRecipe, idUser = idUser };
+                    DtoLike newLike = new() { idRecipe = so.idRecipe, idUser = idUser, status = true};
                     await qLike.GiveLikeAsync(newLike);
                     
                     if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
@@ -80,12 +83,6 @@ namespace apprecipes.Controllers
                             await qRating.UpdateRatingLikedAsync(so.idRecipe);
                             _so.message.listMessage.Add("Enhorabuena!");
                         }
-                        if (_requestCount == 2)
-                        {
-                            await qRating.UpdateRatingDislikedAsync(so.idRecipe);
-                            _so.message.listMessage.Add("Enhoramala!");
-                            _requestCount = 0;
-                        }
                     }
                     else
                     {
@@ -93,6 +90,7 @@ namespace apprecipes.Controllers
                         _so.message.listMessage.Add("Enhorabuena!");
                     }
                 }
+
                 _so.message.Success();
             }
             catch (Exception ex)
@@ -101,7 +99,6 @@ namespace apprecipes.Controllers
                 _so.message.Exception();
                 return StatusCode(500, _so.message);
             }
-
             return _so.message;
         }
     }

@@ -50,10 +50,15 @@ CREATE TABLE `recipes` (
 CREATE TABLE `likes` (
   `idRecipe` char(36) NOT NULL,
   `idUser` char(36) NOT NULL,
+  `status` boolean NOT NULL,
   PRIMARY KEY (`idRecipe`, `idUser`),
   FOREIGN KEY (`idRecipe`) REFERENCES `recipes` (`id`),
   FOREIGN KEY (`idUser`) REFERENCES `users` (`id`)
 );
+
+ALTER TABLE `likes`
+ADD CONSTRAINT `unique_likes` UNIQUE (idUser, idRecipe);
+
 
 CREATE TABLE `ratings` (
   `id` char(36) PRIMARY KEY NOT NULL,
