@@ -11,11 +11,15 @@ namespace apprecipes.Controllers
 {
     public class RatingController : ControllerGeneric<SoRating>
     {
+        private static int _requestCount = 0;
+        private static Guid _lastIdRecipe = Guid.Empty;
+        
         [Authorize(Roles="Logged")]
         [HttpPatch]
         [Route("[action]")]
         public async Task<ActionResult<DtoMessage>> Liked( [FromBody]DtoLikeds so)
         {
+            Interlocked.Increment(ref _requestCount);
             try
             {
                 Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
@@ -34,28 +38,61 @@ namespace apprecipes.Controllers
                     return Conflict(_so.message);
                 }
                 
+                if (_lastIdRecipe != so.idRecipe)
+                {
+                    _requestCount = 1; 
+                    _lastIdRecipe = so.idRecipe;
+                }
+                
+                QRating qRating = new();
                 QLike qLike = new();
                 if (await qLike.HasUserLikedRecipeAsync(idUser, so.idRecipe))
                 {
-                    _so.message.listMessage.Add("Usted ya le dio me gusta a esta receta.");
-                    _so.message.Warning();
-                    return Unauthorized(_so.message);
-                }
-
-                QRating qRating = new();
-                if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
-                {
-                    await qRating.UpdateRatingAsync(so.idRecipe);
+                    if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
+                    {
+                        if (_requestCount == 1)
+                        {
+                            await qRating.UpdateRatingLikedAsync(so.idRecipe);
+                            _so.message.listMessage.Add("Enhorabuena!");
+                        }
+                        if (_requestCount == 2)
+                        {
+                            await qRating.UpdateRatingDislikedAsync(so.idRecipe);
+                            _so.message.listMessage.Add("Enhoramala!");
+                            _requestCount = 0;
+                        }
+                    }
+                    else
+                    {
+                        await qRating.CreateRatingAsync(so.idRecipe);
+                        _so.message.listMessage.Add("Enhorabuena!");
+                    }
                 }
                 else
                 {
-                    await qRating.CreateRatingAsync(so.idRecipe);
+                    DtoLike newLike = new() { idRecipe = so.idRecipe, idUser = idUser };
+                    await qLike.GiveLikeAsync(newLike);
+                    
+                    if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
+                    {
+                        if (_requestCount == 1)
+                        {
+                            await qRating.UpdateRatingLikedAsync(so.idRecipe);
+                            _so.message.listMessage.Add("Enhorabuena!");
+                        }
+                        if (_requestCount == 2)
+                        {
+                            await qRating.UpdateRatingDislikedAsync(so.idRecipe);
+                            _so.message.listMessage.Add("Enhoramala!");
+                            _requestCount = 0;
+                        }
+                    }
+                    else
+                    {
+                        await qRating.CreateRatingAsync(so.idRecipe);
+                        _so.message.listMessage.Add("Enhorabuena!");
+                    }
                 }
-                
-                DtoLike newLike = new() { idRecipe = so.idRecipe, idUser = idUser };
-                
-                await qLike.GiveLikeAsync(newLike);
-                _so.message.listMessage.Add("Enhorabuena!");
                 _so.message.Success();
             }
             catch (Exception ex)
@@ -64,6 +101,7 @@ namespace apprecipes.Controllers
                 _so.message.Exception();
                 return StatusCode(500, _so.message);
             }
+
             return _so.message;
         }
     }
