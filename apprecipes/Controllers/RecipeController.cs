@@ -88,7 +88,7 @@ namespace apprecipes.Controllers
             return _so;
         }
         
-        [Authorize(Roles = "Admin,Other")]
+        [AllowAnonymous]
         [HttpGet]
         [Route("[action]")]
         public ActionResult<SoRecipe> GetAll()
@@ -417,6 +417,27 @@ namespace apprecipes.Controllers
                 return StatusCode(500, _so.message);
             }
 
+            return _so;
+        }
+        
+        [Authorize(Roles = "Logged")]
+        [HttpGet]
+        [Route("[action]")]
+        public ActionResult<SoRecipe> WhatDoYouLike()
+        {
+            try
+            {
+                Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
+                QRecipe qRecipe = new();
+                _so.data.listDto = qRecipe.RecipesYouLiked(idUser);
+                _so.message.Success();
+            }
+            catch (Exception e)
+            {
+                _so.message.listMessage.Add(e.Message);
+                _so.message.Exception();
+                return StatusCode(500, _so.message);
+            }
             return _so;
         }
     }

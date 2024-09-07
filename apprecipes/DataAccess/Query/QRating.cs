@@ -29,13 +29,26 @@ namespace apprecipes.DataAccess.Query
             return await dbc.SaveChangesAsync();
         }
 
-        public async Task<int> UpdateRatingAsync(Guid idRecipe)
+        public async Task<int> UpdateRatingLikedAsync(Guid idRecipe)
         {
             using DataBaseContext dbc = new();
             Rating? rating = await dbc.Ratings.FirstOrDefaultAsync(r => r.idRecipe == idRecipe);
             if (rating != null)
             {
                 rating.numberLike += 1;
+                rating.updatedAt = DateTime.UtcNow;
+                return await dbc.SaveChangesAsync();
+            }
+            return 0;
+        }
+        
+        public async Task<int> UpdateRatingDislikedAsync(Guid idRecipe)
+        {
+            using DataBaseContext dbc = new();
+            Rating? rating = await dbc.Ratings.FirstOrDefaultAsync(r => r.idRecipe == idRecipe);
+            if (rating != null && rating.numberLike > 0)
+            {
+                rating.numberLike -= 1;
                 rating.updatedAt = DateTime.UtcNow;
                 return await dbc.SaveChangesAsync();
             }
