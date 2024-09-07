@@ -20,6 +20,13 @@ namespace apprecipes.DataAccess.Query
             return await dbc.Likes.AnyAsync(like => like.idUser == idUser && like.idRecipe == idRecipe);
         }
         
+        public async Task<DtoLike> GetByIdsAsync(Guid idUser, Guid idRecipe)
+        {
+            using DataBaseContext dbc = new();
+            Like? like = await dbc.Likes.FirstOrDefaultAsync(like => like.idUser == idUser && like.idRecipe == idRecipe);
+            return AutoMapper.mapper.Map<DtoLike>(like);
+        }
+        
         public async Task<int> UpdateStatusAsync(Guid idUser, Guid idRecipe, bool status)
         {
             using DataBaseContext dbc = new();

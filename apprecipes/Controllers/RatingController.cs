@@ -11,15 +11,11 @@ namespace apprecipes.Controllers
 {
     public class RatingController : ControllerGeneric<SoRating>
     {
-        private static int _requestCount = 0;
-        private static Guid _lastIdRecipe = Guid.Empty;
-        
         [Authorize(Roles="Logged")]
         [HttpPatch]
         [Route("[action]")]
         public async Task<ActionResult<DtoMessage>> Liked( [FromBody]DtoLikeds so)
         {
-            Interlocked.Increment(ref _requestCount);
             try
             {
                 Guid idUser = Guid.Parse(TokenUtils.GetUserIdFromAccessToken(Request.Headers["Authorization"].ToString()));
@@ -37,61 +33,102 @@ namespace apprecipes.Controllers
                     _so.message.Error();
                     return Conflict(_so.message);
                 }
-                
-                if (_lastIdRecipe != so.idRecipe)
-                {
-                    _requestCount = 1; 
-                    _lastIdRecipe = so.idRecipe;
-                }
-                
+
                 QRating qRating = new();
                 QLike qLike = new();
-                if (await qLike.HasUserLikedRecipeAsync(idUser, so.idRecipe))
+                if (so.status)
                 {
-                    if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
+                    // liked
+                    if (await qLike.HasUserLikedRecipeAsync(idUser, so.idRecipe))
                     {
-                        if (_requestCount == 1)
+                        DtoLike? dtoLike = await qLike.GetByIdsAsync(idUser, so.idRecipe);
+                        if (dtoLike.status == false)
                         {
-                            await qRating.UpdateRatingLikedAsync(so.idRecipe);
-                            await qLike.UpdateStatusAsync(idUser, so.idRecipe, true);
-                            _so.message.listMessage.Add("Enhorabuena!");
+                            if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
+                            {
+                                await qRating.UpdateRatingLikedAsync(so.idRecipe);
+                                await qLike.UpdateStatusAsync(idUser, so.idRecipe, true);
+                                _so.message.listMessage.Add("Enhorabuena!");
+                            }
+                            else
+                            {
+                                await qRating.CreateRatingLikedAsync(so.idRecipe);
+                                await qLike.UpdateStatusAsync(idUser, so.idRecipe, true);
+                                _so.message.listMessage.Add("Enhorabuena!");
+                            }
+                            _so.message.Success();
                         }
-                        if (_requestCount == 2)
+                        else
                         {
-                            await qRating.UpdateRatingDislikedAsync(so.idRecipe);
-                            await qLike.UpdateStatusAsync(idUser, so.idRecipe, false);
-                            _so.message.listMessage.Add("Enhoramala!");
-                            _requestCount = 0;
+                            _so.message.listMessage.Add("Ya le dió, me gusta a esta receta!");
+                            _so.message.Warning();
                         }
                     }
                     else
                     {
-                        await qRating.CreateRatingAsync(so.idRecipe);
-                        await qLike.UpdateStatusAsync(idUser, so.idRecipe, true);
-                        _so.message.listMessage.Add("Enhorabuena!");
+                        DtoLike newLike = new() { idRecipe = so.idRecipe, idUser = idUser, status = true};
+                        await qLike.GiveLikeAsync(newLike);
+                        
+                        if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
+                        {
+                            await qRating.UpdateRatingLikedAsync(so.idRecipe);
+                            _so.message.listMessage.Add("Enhorabuena!");
+                        }
+                        else
+                        {
+                            await qRating.CreateRatingLikedAsync(so.idRecipe);
+                            _so.message.listMessage.Add("Enhorabuena!");
+                        }
+                        _so.message.Success();
                     }
                 }
                 else
                 {
-                    DtoLike newLike = new() { idRecipe = so.idRecipe, idUser = idUser, status = true};
-                    await qLike.GiveLikeAsync(newLike);
-                    
-                    if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
+                    // dislike
+                    if (await qLike.HasUserLikedRecipeAsync(idUser, so.idRecipe))
                     {
-                        if (_requestCount == 1)
+                        DtoLike? dtoLike = await qLike.GetByIdsAsync(idUser, so.idRecipe);
+                        if (dtoLike.status)
                         {
-                            await qRating.UpdateRatingLikedAsync(so.idRecipe);
-                            _so.message.listMessage.Add("Enhorabuena!");
+                            if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
+                            {
+                                await qRating.UpdateRatingDislikedAsync(so.idRecipe);
+                                await qLike.UpdateStatusAsync(idUser, so.idRecipe, false);
+                                _so.message.listMessage.Add("Enhoramala!");
+                            }
+                            else
+                            {
+                                await qRating.CreateRatingDislikedAsync(so.idRecipe);
+                                await qLike.UpdateStatusAsync(idUser, so.idRecipe, false);
+                                _so.message.listMessage.Add("Enhoramala!");
+                            }
+                            _so.message.Success();
+                        }
+                        else
+                        {
+                            _so.message.listMessage.Add("Ya le dió, no me gusta a esta receta!");
+                            _so.message.Warning();
                         }
                     }
                     else
                     {
-                        await qRating.CreateRatingAsync(so.idRecipe);
-                        _so.message.listMessage.Add("Enhorabuena!");
+                        DtoLike newLike = new() { idRecipe = so.idRecipe, idUser = idUser, status = false};
+                        await qLike.GiveLikeAsync(newLike);
+                        
+                        if (await qRating.IsThereRecipeRatingAsync(so.idRecipe))
+                        {
+                            await qRating.UpdateRatingDislikedAsync(so.idRecipe);
+                            await qLike.UpdateStatusAsync(idUser, so.idRecipe, false);
+                            _so.message.listMessage.Add("Enhoramala!");
+                        }
+                        else
+                        {
+                            await qRating.CreateRatingDislikedAsync(so.idRecipe);
+                            _so.message.listMessage.Add("Enhoramala!");
+                        }
+                        _so.message.Success();
                     }
                 }
-
-                _so.message.Success();
             }
             catch (Exception ex)
             {

@@ -13,7 +13,7 @@ namespace apprecipes.DataAccess.Query
             return await dbc.Ratings.AnyAsync(u => u.idRecipe == idRecipe);
         }
 
-        public async Task<int> CreateRatingAsync(Guid idRecipe)
+        public async Task<int> CreateRatingLikedAsync(Guid idRecipe)
         {
             using DataBaseContext dbc = new();
             DtoRating dto = new()
@@ -21,6 +21,22 @@ namespace apprecipes.DataAccess.Query
                 id = Guid.NewGuid(),
                 idRecipe = idRecipe,
                 numberLike = 1,
+                createdAt = DateTime.UtcNow,
+                updatedAt = DateTime.UtcNow
+            };
+            dbc.Ratings.Add(AutoMapper.mapper.Map<Rating>(dto));
+    
+            return await dbc.SaveChangesAsync();
+        }
+        
+        public async Task<int> CreateRatingDislikedAsync(Guid idRecipe)
+        {
+            using DataBaseContext dbc = new();
+            DtoRating dto = new()
+            {
+                id = Guid.NewGuid(),
+                idRecipe = idRecipe,
+                numberLike = 0,
                 createdAt = DateTime.UtcNow,
                 updatedAt = DateTime.UtcNow
             };
