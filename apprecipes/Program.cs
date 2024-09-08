@@ -14,7 +14,6 @@ namespace apprecipes
     {
         public static void Main(string[] args)
         {
-            string myAllowSpecificOrigins = "AllowOnlyDefaults";
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             #region appsettings
@@ -31,7 +30,7 @@ namespace apprecipes
             #region CORS
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy(myAllowSpecificOrigins,
+                options.AddPolicy("AllowOnlyDefaults",
                     policy =>
                     {
                         policy.WithOrigins(AppSettings.GetOriginRequest().Split(','))
@@ -52,7 +51,7 @@ namespace apprecipes
             }).AddJwtBearer(jwtBearerOptions =>
             {
                 jwtBearerOptions.SaveToken = true;
-                jwtBearerOptions.RequireHttpsMetadata = false;
+                jwtBearerOptions.RequireHttpsMetadata = true;
                 jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -91,16 +90,16 @@ namespace apprecipes
                     Version = "v1",
                     Title = "API de recetas culinarias.",
                     Description = "Esta API permite gestionar y acceder a recetas de comida culinaria. Los usuarios pueden crear, leer, actualizar y eliminar recetas, así como buscar recetas por diferentes criterios.",
-                    TermsOfService = new Uri("https://github.com/Lionnos"),
+                    TermsOfService = new Uri("https://github.com/teamjug/apiRecipe"),
                     Contact = new OpenApiContact
                     {
                         Name = "Collaborators",
-                        Url = new Uri("https://github.com/k4lFer"),
+                        Url = new Uri("https://github.com/teamjug/apiRecipe"),
                     },
                     License = new OpenApiLicense
                     {
                         Name = "Licencse",
-                        Url = new Uri("http://localhost:5901")
+                        Url = new Uri("https://github.com/teamjug")
                     }
                 });
                 options.OperationFilter<SecurityRequirementsOperationFilter>();
@@ -116,7 +115,7 @@ namespace apprecipes
             }
             
             app.UseHttpsRedirection();
-            app.UseCors(myAllowSpecificOrigins);
+            app.UseCors("AllowOnlyDefaults");
             app.UseAuthentication();
             app.UseAuthorization();
             

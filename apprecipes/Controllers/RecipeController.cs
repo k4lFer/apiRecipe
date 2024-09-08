@@ -40,7 +40,7 @@ namespace apprecipes.Controllers
             try
             {
                 QRecipe qRecipe = new();
-                _so.data.dto = qRecipe.TheMostLiked();
+                _so.data.listDto = qRecipe.TopThreeMostLiked();
                 _so.message.Success();
             }
             catch (Exception ex)

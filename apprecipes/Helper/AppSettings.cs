@@ -12,7 +12,8 @@ namespace apprecipes.Helper
 
             IConfigurationBuilder builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.Development.json");
+                .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables();
             IConfigurationRoot configuration = builder.Build();
 
             dtoAppSettings.ConnetionStringMariaDB = configuration["ConnectionStrings:ConnetionStringMariaDb"];

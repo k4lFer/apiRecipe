@@ -69,18 +69,23 @@ namespace apprecipes.DataAccess.Query
             return (listDtoRecipes, pagination);
         }
         
-        public DtoRecipe TheMostLiked()
+        public List<DtoRecipe> TopThreeMostLiked()
         {
             using DataBaseContext dbc = new();
-            Rating? mostLikedRating = dbc.Ratings
+            List<Guid> topRatedRecipeIds = dbc.Ratings
                 .OrderByDescending(rt => rt.numberLike)
-                .FirstOrDefault();
-            Recipe? recipe = dbc.Recipes
+                .Take(3)
+                .Select(rt => rt.idRecipe)
+                .ToList();
+            List<Recipe> topRecipes = dbc.Recipes
+                .Where(r => topRatedRecipeIds.Contains(r.id))
                 .Include(r => r.ChildImages)
                 .Include(r => r.ChildVideos)
-                .Include(r=>r.ChildRating)
-                .FirstOrDefault(r => mostLikedRating != null && r.id == mostLikedRating.idRecipe);
-            return AutoMapper.mapper.Map<DtoRecipe>(recipe);
+                .Include(r => r.ChildRating)
+                .ToList()
+                .OrderBy(r => topRatedRecipeIds.IndexOf(r.id))
+                .ToList();
+            return AutoMapper.mapper.Map<List<DtoRecipe>>(topRecipes);
         }
 
         public List<DtoRecipe> GetAll()
